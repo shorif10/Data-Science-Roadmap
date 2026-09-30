@@ -1,0 +1,82 @@
+# Single source of truth for the churn service. Paths are relative to the project root
+# (the folder that contains configs/). Every number below is a *choice*: notebook 01 explains
+# how the cost matrix was derived and notebook 04 shows how the threshold reacts to it.
+
+paths:
+  data: datasets/churn.csv
+  output_dir: artifacts/model
+
+target: churned
+id_column: customer_id
+
+split:
+  strategy: stratified      # stratified | ordered
+  order_by: customer_id     # only for "ordered": last rows become test (no real timestamp in this dataset)
+  test_size: 0.20
+  val_size: 0.20            # share of the whole dataset, taken from what is left after test
+  random_state: 42
+
+# Business cost matrix, in currency units per customer, indexed by (truth, decision).
+# Derivation (illustrative numbers, see notebook 01):
+#   retention offer costs 20; a churner is worth 200; 40% of contacted churners accept the offer.
+#   fp = 20 (offer wasted on a loyal customer)       fn = 200 (churner lost, nobody acted)
+#   tp = 20 + 0.6 * 200 = 140 (offer paid, still lost 60% of the time)      tn = 0
+costs:
+  tn: 0.0
+  fp: 20.0
+  fn: 200.0
+  tp: 140.0
+
+features:
+  # Add is_first_year and charge_gap (features.py)? Off: 5-fold CV on the training split showed no gain
+  # (notebook 03), so the simpler model wins. Flip it and re-run to see for yourself.
+  engineer: false
+
+selection:
+  metric: roc_auc           # roc_auc | average_precision  (measured on the validation split)
+  candidates: [logistic, hgb]
+
+models:
+  logistic:
+    C: 1.0
+    max_iter: 1000
+  hgb:
+    max_iter: 200
+    learning_rate: 0.05
+    max_depth: 4
+    min_samples_leaf: 40
+    l2_regularization: 1.0
+
+# Release gate used by CI/Airflow after training (evaluate_gate in train.py).
+# min_test_auc is DERIVED, not invented (notebook 06, tests/test_train.py::test_shipped_gate_floor_is_derived):
+#   naive one-rule score (contract + 0.3 * support_calls), validation AUC        0.719
+#   logistic baseline, validation AUC 0.802, lower end of its 95% bootstrap interval 0.775
+#   floor = that lower bound rounded DOWN to 0.01 = 0.77, so a model statistically no better than the
+#   naive rule fails, while normal retrain-to-retrain noise passes. It is a regression tripwire, not a promise of quality.
+# If you change the data or the split, re-derive it (the test will tell you).
+gate:
+  min_test_auc: 0.77
+  max_cost_ratio_vs_flag_none: 1.0   # model must cost no more than "contact nobody"
+
+mlflow:
+  enabled: false
+  # MLflow 3.x treats the plain file store as maintenance-mode (needs MLFLOW_ALLOW_FILE_STORE=true),
+  # so the default local backend is a SQLite file. Paths are relative to the project root.
+  tracking_uri: sqlite:///artifacts/mlflow.db
+  artifact_root: artifacts/mlartifacts
+  experiment: churn-service
+
+model:
+  version: "1.0.0"          # human-controlled; a data/config hash is appended automatically
+
+serving:
+  model_path: artifacts/model/model.joblib
+  max_batch_size: 1000
+
+# Rules of thumb, not laws: PSI < 0.1 stable, 0.1-0.25 moderate shift, > 0.25 major shift.
+drift:
+  bins: 10
+  psi_warn: 0.10
+  psi_alert: 0.25
+  ks_alert: 0.10            # KS statistic (effect size); p-values are meaningless on big samples
+  min_rows: 200             # refuse to judge drift on fewer rows

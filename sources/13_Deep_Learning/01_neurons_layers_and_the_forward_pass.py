@@ -1,0 +1,442 @@
+# %% [markdown]
+# # Neurons, Layers and the Forward Pass
+#
+# **Why this matters.** Every deep learning framework (PyTorch, Keras, JAX) is a fancy way of doing the
+# arithmetic in this notebook and differentiating it. If you can write a forward pass by hand and predict
+# the shape of every tensor, then shape errors, "why does this layer have N parameters?" and
+# "why do we need activation functions?" stop being mysteries. Interviewers ask exactly these questions.
+#
+# **You will learn**
+# - compute what one neuron does (`w . x + b`, then an activation) and train a perceptron on AND / OR
+# - see why a single neuron cannot solve XOR, and how one hidden layer can
+# - implement sigmoid, tanh, ReLU and softmax, and prove that stacked linear layers collapse into one
+# - write a batched forward pass with matrix shapes `(n, d) @ (d, h) + (h,)` and count parameters
+#
+# **Prerequisites:** [Vectors and matrices](../02_Math_for_Data_Science/01_vectors_and_matrices.ipynb) and
+# [NumPy arrays](../04_NumPy/).
+#
+# > Data used: scikit-learn's `make_moons` (two interleaved half circles, generated on the fly) and the
+# > bundled `digits` dataset (8x8 handwritten digit images, real data that ships with scikit-learn).
+
+# %%
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_digits, make_moons
+from sklearn.model_selection import train_test_split
+
+rng = np.random.default_rng(42)
+np.set_printoptions(precision=3, suppress=True)
+
+# %% [markdown]
+# ## 1. One neuron
+#
+# A neuron is a **weighted vote followed by a squash**. Given inputs `x` (a vector), it computes
+#
+# `z = w . x + b`  (a *linear* score)   and then   `a = f(z)`  (an *activation*).
+#
+# The weights `w` say how much each input matters, the bias `b` shifts the threshold, and `f` decides how the score
+# becomes an output. That is all. If `f` is the identity you have linear regression; if `f` is the sigmoid you have
+# logistic regression. A neural network is many of these wired together.
+
+# %%
+def neuron(x, w, b, f):
+    z = np.dot(w, x) + b
+    return f(z)
+
+
+step = lambda z: (z > 0).astype(float) if isinstance(z, np.ndarray) else float(z > 0)
+
+# A neuron that behaves like logical AND: fires only when BOTH inputs are 1
+w_and, b_and = np.array([1.0, 1.0]), -1.5
+for x in [(0, 0), (0, 1), (1, 0), (1, 1)]:
+    print(x, "->", neuron(np.array(x), w_and, b_and, step))
+
+# %% [markdown]
+# *What just happened?* With `w = [1, 1]` and `b = -1.5` the score `x1 + x2 - 1.5` is only positive when both inputs
+# are 1. Geometrically, `w . x + b = 0` is a **line** in input space and the neuron says which side of the line a point is on.
+# Change `b` to `-0.5` and the same neuron computes OR.
+
+# %% [markdown]
+# ## 2. Learning the weights: the perceptron
+#
+# We do not want to choose weights by hand. The classic *perceptron rule* nudges the weights whenever the neuron is wrong:
+# `w += lr * (target - prediction) * x` and `b += lr * (target - prediction)`. If the classes are linearly separable, this is
+# guaranteed to converge.
+
+# %%
+def train_perceptron(X, y, epochs=25, lr=0.1):
+    w, b = np.zeros(X.shape[1]), 0.0
+    for _ in range(epochs):
+        for xi, ti in zip(X, y):
+            pred = float(np.dot(w, xi) + b > 0)
+            w += lr * (ti - pred) * xi
+            b += lr * (ti - pred)
+    return w, b
+
+
+def accuracy_of(w, b, X, y):
+    return float(np.mean((X @ w + b > 0).astype(float) == y))
+
+
+X_logic = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=float)
+gates = {"AND": [0, 0, 0, 1], "OR": [0, 1, 1, 1], "XOR": [0, 1, 1, 0]}
+for name, y_gate in gates.items():
+    y_gate = np.array(y_gate, dtype=float)
+    w, b = train_perceptron(X_logic, y_gate)
+    print(f"{name:>3}: accuracy {accuracy_of(w, b, X_logic, y_gate):.0%}   w={w}, b={b:.2f}")
+
+# %% [markdown]
+# AND and OR are learned perfectly; **XOR never is** (at most 3 of the 4 points). No single straight line separates
+# `{(0,1), (1,0)}` from `{(0,0), (1,1)}`. This 1969 observation (Minsky and Papert) is why depth matters: one neuron draws one line,
+# and XOR needs two lines combined.
+
+# %% [markdown]
+# ## 3. Activation functions
+#
+# The activation `f` is what makes a layer more than a matrix multiply. The common ones:
+#
+# | Name | Formula | Range | Typical use |
+# |---|---|---|---|
+# | sigmoid | `1 / (1 + e^-z)` | (0, 1) | output for binary probability; rarely in hidden layers now |
+# | tanh | `(e^z - e^-z) / (e^z + e^-z)` | (-1, 1) | zero-centred; used inside RNNs/LSTMs |
+# | ReLU | `max(0, z)` | [0, inf) | default hidden activation |
+# | leaky ReLU | `max(0.01 z, z)` | (-inf, inf) | avoids "dead" ReLU units |
+# | softmax | `e^z_i / sum_j e^z_j` | sums to 1 | output for multi-class probabilities |
+
+# %%
+def sigmoid(z):
+    return 1.0 / (1.0 + np.exp(-z))
+
+
+def relu(z):
+    return np.maximum(0.0, z)
+
+
+def softmax(z):
+    z = z - z.max(axis=-1, keepdims=True)  # subtract the max: same result, no overflow
+    e = np.exp(z)
+    return e / e.sum(axis=-1, keepdims=True)
+
+
+zs = np.linspace(-5, 5, 201)
+fig, ax = plt.subplots(1, 3, figsize=(12, 3))
+for a_, (name, fn) in zip(ax, {"sigmoid": sigmoid, "tanh": np.tanh, "ReLU": relu}.items()):
+    a_.plot(zs, fn(zs), label="f(z)")
+    a_.plot(zs, np.gradient(fn(zs), zs), "--", label="slope f'(z)")
+    a_.set_title(name)
+    a_.set_xlabel("z (pre-activation)")
+    a_.set_ylabel("output")
+    a_.legend()
+plt.tight_layout()
+plt.show()
+
+# %% [markdown]
+# Look at the dashed slopes. Sigmoid and tanh are nearly flat for large `|z|`, so gradients there are almost zero
+# (the **vanishing gradient** problem, notebook 03). ReLU has slope exactly 1 for positive `z` and 0 for negative `z`.
+#
+# Softmax turns arbitrary scores into probabilities. Note the max-subtraction trick:
+
+# %%
+scores = np.array([[2.0, 1.0, 0.1], [1000.0, 1001.0, 999.0]])
+print(softmax(scores))
+print("rows sum to:", softmax(scores).sum(axis=1))
+print("naive exp(1000) =", np.exp(1000.0), "(overflow -> inf, so a naive softmax gives nan)")
+
+# %% [markdown]
+# ## 4. Why non-linearity matters: linear layers collapse
+#
+# Suppose we stack two layers *without* an activation: `h = W1 x` then `out = W2 h`. Then `out = (W2 W1) x`, which is
+# a single linear layer. Ten linear layers are exactly as expressive as one. Let us verify that numerically.
+
+# %%
+W1 = rng.normal(size=(2, 8))
+W2 = rng.normal(size=(8, 3))
+X_demo = rng.normal(size=(5, 2))
+
+two_layers = (X_demo @ W1) @ W2
+one_layer = X_demo @ (W1 @ W2)
+print("two linear layers == one linear layer:", np.allclose(two_layers, one_layer))
+
+# insert a ReLU in between and the equivalence breaks
+with_relu = relu(X_demo @ W1) @ W2
+print("with a ReLU in between still equal?   ", np.allclose(with_relu, one_layer))
+
+# %% [markdown]
+# *What just happened?* Matrix multiplication is associative, so any chain of linear maps is one linear map. The
+# activation between layers is the only thing that lets depth add expressive power.
+
+# %% [markdown]
+# ## 5. A hidden layer solves XOR (weights chosen by hand)
+#
+# Two lines instead of one: hidden neuron 1 computes OR, hidden neuron 2 computes NAND (not-AND), and the output
+# neuron ANDs them. `OR AND NAND` is exactly XOR.
+
+# %%
+W1_xor = np.array([[1.0, -1.0],
+                   [1.0, -1.0]])      # shape (2 inputs, 2 hidden): columns are [OR neuron, NAND neuron]
+b1_xor = np.array([-0.5, 1.5])
+W2_xor = np.array([[1.0], [1.0]])     # shape (2 hidden, 1 output): AND of the two hidden units
+b2_xor = np.array([-1.5])
+
+hidden = step(X_logic @ W1_xor + b1_xor)
+output = step(hidden @ W2_xor + b2_xor)
+print("hidden layer outputs:\n", hidden)
+print("network output:", output.ravel(), " XOR truth:", gates["XOR"])
+
+# %% [markdown]
+# The hidden layer **re-represents** the inputs: in hidden space `(OR, NAND)` the four points become linearly separable.
+# This is the heart of deep learning: layers learn a representation in which the final decision is easy.
+# We wrote these weights by hand; the next notebook shows how to find them automatically.
+
+# %% [markdown]
+# ## 6. Non-linearity on real-ish data: moons
+#
+# Linear vs non-linear, measured. Scikit-learn's `MLPClassifier` is a small neural network; setting
+# `activation="identity"` removes the non-linearity and turns it into a (roughly) linear model.
+
+# %%
+from sklearn.neural_network import MLPClassifier
+
+X_m, y_m = make_moons(n_samples=600, noise=0.2, random_state=42)
+Xm_tr, Xm_te, ym_tr, ym_te = train_test_split(X_m, y_m, test_size=0.25, stratify=y_m, random_state=42)
+
+models = {}
+for act in ["identity", "relu"]:
+    models[act] = MLPClassifier(hidden_layer_sizes=(16,), activation=act, max_iter=2000, random_state=42).fit(Xm_tr, ym_tr)
+    print(f"activation={act:<8} test accuracy = {models[act].score(Xm_te, ym_te):.3f}")
+
+
+def plot_boundary(ax, model, X, y, title):
+    gx, gy = np.meshgrid(np.linspace(X[:, 0].min() - .5, X[:, 0].max() + .5, 200),
+                         np.linspace(X[:, 1].min() - .5, X[:, 1].max() + .5, 200))
+    zz = model.predict(np.c_[gx.ravel(), gy.ravel()]).reshape(gx.shape)
+    ax.contourf(gx, gy, zz, alpha=0.25, cmap="coolwarm")
+    ax.scatter(X[:, 0], X[:, 1], c=y, s=12, cmap="coolwarm", edgecolor="none")
+    ax.set_title(title)
+    ax.set_xlabel("feature 1")
+    ax.set_ylabel("feature 2")
+
+
+fig, ax = plt.subplots(1, 2, figsize=(9, 3.5))
+for a_, act in zip(ax, models):
+    plot_boundary(a_, models[act], Xm_te, ym_te, f"{act} hidden layer (test points)")
+plt.tight_layout()
+plt.show()
+
+# %% [markdown]
+# The identity network can only draw a straight boundary, however many hidden units it has. The ReLU network bends it.
+# (Moons with noise 0.2 is an easy problem, so the gap is modest; on harder shapes it grows.)
+
+# %% [markdown]
+# ## 7. The batched forward pass and parameter counting
+#
+# Real code never loops over samples. A batch `X` of shape `(n, d)` goes through a layer with weights `W` of shape `(d, h)`
+# and bias `b` of shape `(h,)`: `A = f(X @ W + b)`, giving shape `(n, h)`. The bias is *broadcast* across the `n` rows.
+# Digits gives us a realistic size: each 8x8 image is flattened to 64 numbers, and there are 10 classes.
+
+# %%
+digits = load_digits()
+X_d = digits.data / 16.0          # pixel values are 0..16, scale to 0..1
+y_d = digits.target
+print("X:", X_d.shape, " y:", y_d.shape)
+
+
+def init_layers(sizes, rng):
+    """He initialisation: weights ~ N(0, 2/fan_in). Returns a list of (W, b)."""
+    return [(rng.normal(0.0, np.sqrt(2.0 / d_in), size=(d_in, d_out)), np.zeros(d_out))
+            for d_in, d_out in zip(sizes[:-1], sizes[1:])]
+
+
+def forward(X, layers):
+    a = X
+    for W, b in layers[:-1]:
+        a = relu(a @ W + b)
+    W, b = layers[-1]
+    return softmax(a @ W + b)          # last layer: softmax probabilities
+
+
+layers = init_layers([64, 32, 16, 10], rng)
+for i, (W, b) in enumerate(layers, 1):
+    print(f"layer {i}: W {W.shape}, b {b.shape}, parameters = {W.size + b.size}")
+print("total parameters:", sum(W.size + b.size for W, b in layers))
+
+probs = forward(X_d, layers)
+print("output shape:", probs.shape, "| each row sums to 1:", np.allclose(probs.sum(axis=1), 1))
+print("accuracy of the UNTRAINED network:", (probs.argmax(axis=1) == y_d).mean().round(3), "(chance is about 0.10)")
+
+# %% [markdown]
+# *What just happened?* We pushed 1,797 images through a 64-32-16-10 network in three matrix multiplications. The
+# parameter count of a dense layer is `d_in * d_out + d_out` (weights plus biases). An untrained network is roughly a
+# random guesser; **training** means adjusting those numbers to shrink a loss, which is the next notebook.
+
+# %% [markdown]
+# The loss for classification is **cross-entropy**: the average of `-log(probability given to the true class)`.
+# A random guesser over 10 classes should score about `log(10)`:
+
+# %%
+def cross_entropy(probs, y):
+    return float(-np.mean(np.log(probs[np.arange(len(y)), y] + 1e-12)))
+
+
+print(f"cross-entropy of the untrained net: {cross_entropy(probs, y_d):.3f}   log(10) = {np.log(10):.3f}")
+
+# %% [markdown]
+# ## Common mistakes
+#
+# 1. **Forgetting the activation** between layers: the network silently degenerates to a linear model (section 4).
+# 2. **Shape confusion `(d, h)` vs `(h, d)`:** PyTorch's `nn.Linear` stores weights as `(out, in)` and computes `x @ W.T`;
+#    our NumPy code stores `(in, out)`. Always print shapes when in doubt.
+# 3. **Softmax without max-subtraction** overflows for large scores (shown above).
+# 4. **Unscaled inputs:** raw pixel values 0..16 (or salaries in the tens of thousands) make early training erratic. Scale inputs.
+# 5. **Initialising all weights to zero:** every hidden neuron in a layer then computes the same thing and receives the same gradient,
+#    so they never differentiate. Random initialisation *breaks the symmetry*.
+
+# %%
+# Demonstration of mistake 5: identical hidden units stay identical
+W_zero = np.zeros((64, 4))
+hidden_zero = relu(X_d[:5] @ W_zero)
+print("all four hidden units give the same output for every image:", np.all(hidden_zero == hidden_zero[:, [0]]))
+
+# %% [markdown]
+# ## Interview corner
+#
+# **1. Why do we need non-linear activation functions?**
+# <details><summary>Answer</summary>
+# Without them a stack of layers is a product of matrices, which is a single matrix, so the network can only represent linear functions.
+# The non-linearity lets each layer bend the space so that depth adds capacity.
+# </details>
+#
+# **2. How many parameters does a dense layer from 100 inputs to 50 outputs have?**
+# <details><summary>Answer</summary>
+# <code>100 * 50 + 50 = 5050</code>: one weight per (input, output) pair plus one bias per output.
+# </details>
+#
+# **3. Why softmax for multi-class outputs but sigmoid for binary?**
+# <details><summary>Answer</summary>
+# Softmax produces a probability distribution over mutually exclusive classes (outputs sum to 1). Sigmoid gives one probability for a single yes/no
+# event; with independent sigmoids per output you get multi-<em>label</em> classification (a sample can have several labels).
+# </details>
+#
+# **4. Why not initialise all weights to zero?**
+# <details><summary>Answer</summary>
+# Symmetry: all neurons in a layer compute identical outputs and get identical gradient updates, so they stay identical and the layer acts like a single neuron.
+# </details>
+
+# %% [markdown]
+# ## Exercises
+
+# %% [markdown]
+# ### Exercise 1: Leaky ReLU
+# Implement `leaky_relu(z, alpha=0.01)`: returns `z` where `z > 0` and `alpha * z` elsewhere. It must work on NumPy arrays.
+# *Hint: `np.where(condition, if_true, if_false)`.*
+
+# %% tags=["starter"]
+def leaky_relu(z, alpha=0.01):
+    ...
+
+# %%
+zt = np.array([-3.0, -0.5, 0.0, 2.0])
+out = leaky_relu(zt)
+assert isinstance(out, np.ndarray) and out.shape == zt.shape, "return an array with the same shape as the input"
+assert np.allclose(out, [-0.03, -0.005, 0.0, 2.0]), f"got {out}"
+assert np.allclose(leaky_relu(zt, alpha=0.2), [-0.6, -0.1, 0.0, 2.0]), "alpha should be a parameter"
+print("Exercise 1 passed")
+
+# %% tags=["solution"]
+def leaky_relu(z, alpha=0.01):
+    return np.where(z > 0, z, alpha * z)
+
+# %% [markdown]
+# ### Exercise 2: Shape and parameter bookkeeping
+# For a network with layer sizes `[64, 128, 64, 10]` on the digits data, store in `n_params` the total number of parameters
+# (weights + biases) and in `logits_shape` the tuple shape of the output for the **whole** digits dataset (`X_d`).
+# *Hint: build it with `init_layers` and look at the shapes, or compute the formula.*
+
+# %% tags=["starter"]
+sizes = [64, 128, 64, 10]
+n_params = ...
+logits_shape = ...
+
+# %%
+expected_params = sum(a * b + b for a, b in zip(sizes[:-1], sizes[1:]))
+assert n_params == expected_params, f"each layer has d_in*d_out + d_out parameters; expected {expected_params}, got {n_params}"
+assert tuple(logits_shape) == (len(X_d), 10), "one row per image, one column per class"
+print("Exercise 2 passed")
+
+# %% tags=["solution"]
+sizes = [64, 128, 64, 10]
+layers_ex2 = init_layers(sizes, np.random.default_rng(0))
+n_params = sum(W.size + b.size for W, b in layers_ex2)
+logits_shape = forward(X_d, layers_ex2).shape
+
+# %% [markdown]
+# ### Exercise 3: Build XOR with a different hidden pair
+# Above we used `OR` and `NAND` as hidden units. Now use **`OR` and `AND`** as the two hidden units instead. Set `W1`, `b1`, `W2`, `b2`
+# (step activation everywhere) so the network outputs XOR. The output neuron must fire when OR is on and AND is off.
+# *Hint: the output neuron computes `h_or - h_and - 0.5 > 0`.*
+
+# %% tags=["starter"]
+W1 = np.zeros((2, 2))
+b1 = np.zeros(2)
+W2 = np.zeros((2, 1))
+b2 = np.zeros(1)
+
+# %%
+h = step(X_logic @ W1 + b1)
+o = step(h @ W2 + b2).ravel()
+assert np.array_equal(o, np.array(gates["XOR"], dtype=float)), f"network output {o}, expected {gates['XOR']}"
+assert not np.allclose(W1[:, 0], W1[:, 1]) or not np.allclose(b1[0], b1[1]), "the two hidden units must differ (OR vs AND)"
+print("Exercise 3 passed")
+
+# %% tags=["solution"]
+W1 = np.array([[1.0, 1.0], [1.0, 1.0]])
+b1 = np.array([-0.5, -1.5])         # unit 0 = OR, unit 1 = AND
+W2 = np.array([[1.0], [-1.0]])
+b2 = np.array([-0.5])                # fires when OR=1 and AND=0
+
+# %% [markdown]
+# ### Exercise 4: Does depth or non-linearity help on a harder shape?
+# Generate `make_circles(n_samples=600, noise=0.1, factor=0.4, random_state=42)` (one ring inside another), split 75/25 with
+# `random_state=42`, and fit two `MLPClassifier(hidden_layer_sizes=(16,), max_iter=2000, random_state=42)` models: one with
+# `activation="identity"` and one with `"relu"`. Store the two test accuracies in `acc_identity` and `acc_relu`.
+
+# %% tags=["starter"]
+from sklearn.datasets import make_circles
+
+acc_identity = ...
+acc_relu = ...
+
+# %%
+Xc, yc = make_circles(n_samples=600, noise=0.1, factor=0.4, random_state=42)
+Xc_tr, Xc_te, yc_tr, yc_te = train_test_split(Xc, yc, test_size=0.25, random_state=42)
+ref_id = MLPClassifier(hidden_layer_sizes=(16,), activation="identity", max_iter=2000, random_state=42).fit(Xc_tr, yc_tr).score(Xc_te, yc_te)
+ref_relu = MLPClassifier(hidden_layer_sizes=(16,), activation="relu", max_iter=2000, random_state=42).fit(Xc_tr, yc_tr).score(Xc_te, yc_te)
+assert abs(acc_identity - ref_id) < 1e-9 and abs(acc_relu - ref_relu) < 1e-9, "use the same split (test_size=0.25, random_state=42) and settings as described"
+assert acc_relu > acc_identity + 0.2, "ReLU should be far better than a linear boundary on concentric circles"
+print(f"Exercise 4 passed (identity {acc_identity:.2f} vs relu {acc_relu:.2f})")
+
+# %% tags=["solution"]
+from sklearn.datasets import make_circles
+
+Xc, yc = make_circles(n_samples=600, noise=0.1, factor=0.4, random_state=42)
+Xc_tr, Xc_te, yc_tr, yc_te = train_test_split(Xc, yc, test_size=0.25, random_state=42)
+acc_identity = MLPClassifier(hidden_layer_sizes=(16,), activation="identity", max_iter=2000, random_state=42).fit(Xc_tr, yc_tr).score(Xc_te, yc_te)
+acc_relu = MLPClassifier(hidden_layer_sizes=(16,), activation="relu", max_iter=2000, random_state=42).fit(Xc_tr, yc_tr).score(Xc_te, yc_te)
+
+# %% [markdown]
+# ### Exercise 5 (open-ended): How many hidden units are enough for moons?
+# Train the ReLU `MLPClassifier` on the moons split from section 6 with 1, 2, 4, 8 and 32 hidden units, and print the test accuracy of each.
+# In a markdown cell, write one sentence on where extra units stop helping and one on why a single hidden unit cannot do much.
+
+# %% [markdown]
+# ## Recap
+# - A neuron is `f(w . x + b)`; a layer is many neurons, computed in one matrix multiply `f(X @ W + b)` with shape `(n, d) -> (n, h)`.
+# - A dense layer has `d_in * d_out + d_out` parameters.
+# - Without non-linear activations, any number of layers collapses into one linear map; ReLU is the default hidden activation.
+# - One neuron draws one line (so it cannot do XOR); a hidden layer learns a new representation where the classes become separable.
+# - Softmax + cross-entropy is the standard multi-class output and loss; an untrained network scores about `log(n_classes)`.
+#
+# **Go deeper:** the scikit-learn user guide chapter "Neural network models (supervised)" and the PyTorch tutorials
+# (pytorch.org/tutorials) once you have finished notebook 05.
+#
+# **Next:** [Backpropagation from scratch](02_backpropagation_from_scratch.ipynb)

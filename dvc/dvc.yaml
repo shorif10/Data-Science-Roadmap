@@ -1,0 +1,26 @@
+# UNVERIFIED SKETCH: DVC is not installed in the environment where this project was written, so
+# `dvc repro` has never been run against it. The stage's cmd, deps and outs mirror the real CLI
+# (churn.train) and are checked for consistency by tests/test_infra.py.
+# Run from the project root:   dvc repro -f dvc/dvc.yaml     (after `dvc init`)
+stages:
+  train:
+    wdir: ..                       # paths below are relative to the project root
+    cmd: python -m churn.train --config configs/config.yaml --params dvc/params.yaml --output-dir artifacts/model
+    deps:
+      - datasets/churn.csv
+      - configs/config.yaml
+      - src/churn
+    params:
+      - dvc/params.yaml:
+          - split
+          - costs
+          - features
+          - models
+          - selection
+    outs:
+      - artifacts/model/model.joblib
+      - artifacts/model/model_card.md
+      - artifacts/model/reference.csv
+    metrics:
+      - artifacts/model/metrics.json:
+          cache: false             # small text file: keep it in git, not in the DVC cache

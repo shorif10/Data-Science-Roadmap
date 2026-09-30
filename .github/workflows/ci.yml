@@ -1,0 +1,27 @@
+# Not executed on GitHub in the authoring environment; its YAML structure is parsed by tests/test_infra.py.
+# The commands are the same ones run locally (ruff was not available offline, so the lint step is unverified).
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install package with dev tools
+        run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check src tests
+      - name: Test
+        run: python -m pytest tests -q

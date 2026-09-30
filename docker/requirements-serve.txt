@@ -1,0 +1,14 @@
+# Pinned serving dependencies. Versions copied from the environment the model was trained in
+# (importlib.metadata on 2026-09-30). The scikit-learn/numpy/pandas pins matter most:
+# a joblib model file must be loaded by the same scikit-learn version that saved it.
+# Direct dependencies only; pip resolves their transitive dependencies.
+numpy==2.4.6
+pandas==3.0.6
+scikit-learn==1.9.1
+scipy==1.17.1
+joblib==1.6.0
+PyYAML==6.0.3
+fastapi==0.142.1
+starlette==1.7.0
+pydantic==2.13.5
+uvicorn==0.54.0

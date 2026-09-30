@@ -1,0 +1,34 @@
+# NOT RUN in the authoring environment (no Docker daemon available there).
+# From the project root:
+#   python -m churn.train --config configs/config.yaml     # writes artifacts/model/
+#   docker compose -f docker/docker-compose.yml up --build api
+#   curl http://localhost:8000/health
+# Optional: train inside a container instead (needs datasets/churn.csv present):
+#   docker compose -f docker/docker-compose.yml --profile train run --rm train
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: churn-api:1.0.0
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../artifacts/model:/models:ro
+    environment:
+      CHURN_MODEL_PATH: /models/model.joblib
+    read_only: true
+    restart: unless-stopped
+
+  train:
+    profiles: ["train"]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: churn-api:1.0.0
+    working_dir: /app
+    user: "0:0"   # bind-mounted output folders are often root-owned on Linux hosts; drop this if yours is not
+    command: ["python", "-m", "churn.train", "--config", "configs/config.yaml", "--output-dir", "/out"]
+    volumes:
+      - ../datasets:/app/datasets:ro
+      - ../artifacts/model:/out

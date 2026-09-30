@@ -1,0 +1,43 @@
+scenario,kpi,expected
+All data,net_revenue,2120590.43
+All data,margin_pct,0.38777541309568203
+All data,orders,5252.0
+All data,aov,403.7681702208683
+All data,premium_share,0.38999831287553244
+All data,return_rate,0.037884553410291205
+Year = 2024,net_revenue,1454779.48
+Year = 2024,margin_pct,0.3860747884620973
+Year = 2024,orders,3539.0
+Year = 2024,aov,411.0707770556654
+Year = 2024,premium_share,0.40600244100226107
+Year = 2024,return_rate,0.03660442435071531
+Year = 2025,net_revenue,336701.55000000005
+Year = 2025,margin_pct,0.3920499920478537
+Year = 2025,orders,840.0
+Year = 2025,aov,400.8351785714286
+Year = 2025,premium_share,0.3704924732303726
+Year = 2025,return_rate,0.039670855479025866
+Channel = web,net_revenue,1052900.39
+Channel = web,margin_pct,0.3864139512760556
+Channel = web,orders,2608.0
+Channel = web,aov,403.71947469325147
+Channel = web,premium_share,0.394891571841853
+Channel = web,return_rate,0.03169222432540182
+Category = Books,net_revenue,91367.37
+Category = Books,margin_pct,0.40571967869929926
+Category = Books,orders,1596.0
+Category = Books,aov,57.247725563909775
+Category = Books,premium_share,0.38841831607936184
+Category = Books,return_rate,0.036422968623106115
+2024 + mobile + Electronics,net_revenue,280278.01
+2024 + mobile + Electronics,margin_pct,0.36005464716978697
+2024 + mobile + Electronics,orders,426.0
+2024 + mobile + Electronics,aov,657.9296009389672
+2024 + mobile + Electronics,premium_share,0.4052296503746406
+2024 + mobile + Electronics,return_rate,0.04381794304836705
+Country = US,net_revenue,667360.03
+Country = US,margin_pct,0.386207082255136
+Country = US,orders,1628.0
+Country = US,aov,409.9263083538084
+Country = US,premium_share,0.3836051883418909
+Country = US,return_rate,0.029222307691398275

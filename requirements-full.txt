@@ -1,0 +1,16 @@
+# Everything beyond the core requirements.txt (Phases 3-5 and the capstone). Large download.
+-r requirements.txt
+# PyTorch CPU wheels:  pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch
+tensorflow-cpu
+keras
+mlflow
+fastapi
+uvicorn
+httpx
+pydantic
+pyyaml
+joblib
+pytest
+mcp
+anthropic

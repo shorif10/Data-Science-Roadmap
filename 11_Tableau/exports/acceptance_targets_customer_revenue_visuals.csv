@@ -1,0 +1,94 @@
+visual,key,metric,value
+Monthly revenue,2023-06,Net Revenue,15225.48
+Monthly revenue,2023-07,Net Revenue,18956.31
+Monthly revenue,2023-08,Net Revenue,18502.43
+Monthly revenue,2023-09,Net Revenue,32169.2
+Monthly revenue,2023-10,Net Revenue,35700.11
+Monthly revenue,2023-11,Net Revenue,88030.5
+Monthly revenue,2023-12,Net Revenue,120525.37
+Monthly revenue,2024-01,Net Revenue,58689.19
+Monthly revenue,2024-02,Net Revenue,61052.57
+Monthly revenue,2024-03,Net Revenue,85762.58
+Monthly revenue,2024-04,Net Revenue,90842.92
+Monthly revenue,2024-05,Net Revenue,91197.2
+Monthly revenue,2024-06,Net Revenue,113866.29
+Monthly revenue,2024-07,Net Revenue,86984.82
+Monthly revenue,2024-08,Net Revenue,127925.47
+Monthly revenue,2024-09,Net Revenue,129930.26
+Monthly revenue,2024-10,Net Revenue,110345.57
+Monthly revenue,2024-11,Net Revenue,219847.8
+Monthly revenue,2024-12,Net Revenue,278334.81
+Monthly revenue,2025-01,Net Revenue,68354.34
+Monthly revenue,2025-02,Net Revenue,45766.29
+Monthly revenue,2025-03,Net Revenue,61544.31
+Monthly revenue,2025-04,Net Revenue,78198.52
+Monthly revenue,2025-05,Net Revenue,82838.09
+New vs returning by month,New 2023-06,Net Revenue,15225.48
+New vs returning by month,Returning 2023-06,Net Revenue,0.0
+New vs returning by month,New 2023-07,Net Revenue,18432.02
+New vs returning by month,Returning 2023-07,Net Revenue,524.29
+New vs returning by month,New 2023-08,Net Revenue,16726.12
+New vs returning by month,Returning 2023-08,Net Revenue,1776.31
+New vs returning by month,New 2023-09,Net Revenue,24844.71
+New vs returning by month,Returning 2023-09,Net Revenue,7324.49
+New vs returning by month,New 2023-10,Net Revenue,27479.87
+New vs returning by month,Returning 2023-10,Net Revenue,8220.24
+New vs returning by month,New 2023-11,Net Revenue,65549.03
+New vs returning by month,Returning 2023-11,Net Revenue,22481.47
+New vs returning by month,New 2023-12,Net Revenue,75937.27
+New vs returning by month,Returning 2023-12,Net Revenue,44588.1
+New vs returning by month,New 2024-01,Net Revenue,46033.96
+New vs returning by month,Returning 2024-01,Net Revenue,12655.23
+New vs returning by month,New 2024-02,Net Revenue,43488.16
+New vs returning by month,Returning 2024-02,Net Revenue,17564.41
+New vs returning by month,New 2024-03,Net Revenue,55821.16
+New vs returning by month,Returning 2024-03,Net Revenue,29941.42
+New vs returning by month,New 2024-04,Net Revenue,63023.09
+New vs returning by month,Returning 2024-04,Net Revenue,27819.83
+New vs returning by month,New 2024-05,Net Revenue,58068.35
+New vs returning by month,Returning 2024-05,Net Revenue,33128.85
+New vs returning by month,New 2024-06,Net Revenue,70115.06
+New vs returning by month,Returning 2024-06,Net Revenue,43751.23
+New vs returning by month,New 2024-07,Net Revenue,51559.73
+New vs returning by month,Returning 2024-07,Net Revenue,35425.09
+New vs returning by month,New 2024-08,Net Revenue,80378.13
+New vs returning by month,Returning 2024-08,Net Revenue,47547.34
+New vs returning by month,New 2024-09,Net Revenue,88741.86
+New vs returning by month,Returning 2024-09,Net Revenue,41188.4
+New vs returning by month,New 2024-10,Net Revenue,56363.68
+New vs returning by month,Returning 2024-10,Net Revenue,53981.89
+New vs returning by month,New 2024-11,Net Revenue,104101.27
+New vs returning by month,Returning 2024-11,Net Revenue,115746.53
+New vs returning by month,New 2024-12,Net Revenue,109916.51
+New vs returning by month,Returning 2024-12,Net Revenue,168418.3
+New vs returning by month,New 2025-01,Net Revenue,11525.43
+New vs returning by month,Returning 2025-01,Net Revenue,56828.91
+New vs returning by month,New 2025-02,Net Revenue,6102.69
+New vs returning by month,Returning 2025-02,Net Revenue,39663.6
+New vs returning by month,New 2025-03,Net Revenue,9145.82
+New vs returning by month,Returning 2025-03,Net Revenue,52398.49
+New vs returning by month,New 2025-04,Net Revenue,6239.37
+New vs returning by month,Returning 2025-04,Net Revenue,71959.15
+New vs returning by month,New 2025-05,Net Revenue,6948.83
+New vs returning by month,Returning 2025-05,Net Revenue,75889.26
+Revenue by country,AU,Net Revenue,147300.5
+Revenue by country,BD,Net Revenue,151075.96
+Revenue by country,CA,Net Revenue,230315.39
+Revenue by country,DE,Net Revenue,207092.22
+Revenue by country,FR,Net Revenue,169873.45
+Revenue by country,IN,Net Revenue,291943.0
+Revenue by country,UK,Net Revenue,255629.88
+Revenue by country,US,Net Revenue,667360.03
+Revenue per customer by country,AU,Revenue per Active Customer,1187.91
+Revenue per customer by country,BD,Revenue per Active Customer,1079.11
+Revenue per customer by country,CA,Revenue per Active Customer,1412.98
+Revenue per customer by country,DE,Revenue per Active Customer,1107.45
+Revenue per customer by country,FR,Revenue per Active Customer,1163.52
+Revenue per customer by country,IN,Revenue per Active Customer,1216.43
+Revenue per customer by country,UK,Revenue per Active Customer,1259.26
+Revenue per customer by country,US,Revenue per Active Customer,1222.27
+Revenue by category,Books,Net Revenue,91367.37
+Revenue by category,Electronics,Net Revenue,1045919.55
+Revenue by category,Fashion,Net Revenue,268992.64
+Revenue by category,Home,Net Revenue,336130.95
+Revenue by category,Sports,Net Revenue,378179.92

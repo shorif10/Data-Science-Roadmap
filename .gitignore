@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+mlruns/
+*.pyc
+datasets/*.csv
+datasets/*.db
+datasets/*.parquet
+_validate_tmp/
+# 25_End_to_End_Project outputs
+artifacts/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/

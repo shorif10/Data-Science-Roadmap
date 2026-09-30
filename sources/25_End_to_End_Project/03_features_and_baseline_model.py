@@ -1,0 +1,315 @@
+# %% [markdown]
+# # Capstone 3: Features and a Baseline Model
+#
+# **Why this matters.** The most expensive bug in applied ML is a model that scores 0.90 in your notebook and 0.70 in
+# production because something from the test rows leaked into training. The cure is structural, not a matter of
+# discipline: put **every step that learns from data inside one scikit-learn `Pipeline`** and fit it on training rows only.
+# This notebook builds that pipeline, trains the simple model every later result is compared against, and tests whether extra features help.
+#
+# **You will learn**
+# - split first, and keep the test set out of sight until the end
+# - see leakage happen on pure noise, then prevent it with a `Pipeline`
+# - read the preprocessing in `src/churn/features.py` and what it learned from train
+# - measure a baseline with cross-validation, and judge whether a new feature earns its place
+#
+# **Prerequisites:** [Notebook 02](02_data_understanding_and_cleaning.ipynb) and the [Machine Learning module](../12_Machine_Learning/).
+
+# %%
+import sys
+import tempfile
+from pathlib import Path
+
+SRC = Path("../src").resolve()
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+import numpy as np
+import pandas as pd
+from sklearn.dummy import DummyClassifier
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.pipeline import make_pipeline
+
+from churn import train
+from churn.config import load_config, resolve
+from churn.data import FEATURE_COLUMNS, TARGET, load_dataset
+from churn.features import build_pipeline, build_preprocessor, engineer, make_estimator
+
+CFG = load_config("../configs/config.yaml")
+df = load_dataset(resolve(CFG, CFG["paths"]["data"]))
+train_df, val_df, test_df = train.split_data(df, CFG)
+print(len(train_df), len(val_df), len(test_df))
+
+# %% [markdown]
+# ## 1. Split first, then forget the test set
+#
+# `split_data` is stratified (same churn rate in each part) and seeded. Train fits models, **validation** chooses between
+# them and picks the threshold, **test** is opened once at the end (notebook 05). From here on this notebook never uses `test_df`.
+
+# %%
+pd.DataFrame({"rows": [len(train_df), len(val_df), len(test_df)],
+              "churn_rate": [train_df[TARGET].mean(), val_df[TARGET].mean(), test_df[TARGET].mean()]},
+             index=["train", "validation", "test"]).round(3)
+
+# %% [markdown]
+# > The config also supports `split.strategy: ordered`, which puts the *last* rows (by a chosen column) into test. That is how you
+# > would simulate "train on the past, predict the future" if the data had a timestamp. This file has none (only `customer_id`), so
+# > the default is a stratified random split and **we cannot measure robustness over time**; the model card says so.
+
+# %% [markdown]
+# ## 2. Leakage on pure noise
+#
+# Claim: *selecting features on all the data and cross-validating afterwards gives a fake score.* Test it with columns that contain
+# no information at all: 500 random features and a random 0/1 target, so the honest AUC is 0.5.
+
+# %%
+rng = np.random.default_rng(0)
+noise_X = rng.normal(size=(1000, 500))
+noise_y = rng.integers(0, 2, size=1000)
+cv = StratifiedKFold(5, shuffle=True, random_state=42)
+
+# WRONG: pick the 20 "best" columns using ALL rows, then cross-validate on those 20
+X_selected = SelectKBest(f_classif, k=20).fit_transform(noise_X, noise_y)
+wrong = cross_val_score(LogisticRegression(), X_selected, noise_y, cv=cv, scoring="roc_auc").mean()
+
+# RIGHT: selection happens inside each training fold
+pipe = make_pipeline(SelectKBest(f_classif, k=20), LogisticRegression())
+right = cross_val_score(pipe, noise_X, noise_y, cv=cv, scoring="roc_auc").mean()
+print(f"leaky AUC on pure noise: {wrong:.3f}   pipeline AUC: {right:.3f}")
+
+# %% [markdown]
+# *What just happened?* The leaky version peeked at the validation labels while choosing columns, so it "found" patterns in noise.
+# The pipeline version re-selects inside every fold and returns to roughly 0.5, the truth. The same mechanism applies to imputation
+# means, scaling, target encoding and oversampling. **Anything that calls `.fit` belongs in the pipeline.**
+
+# %% [markdown]
+# ## 3. The preprocessing, read like code
+#
+# `build_preprocessor()` in `features.py` returns a `ColumnTransformer`:
+# - numeric columns: median imputation **with a missing-indicator column**, then standardisation;
+# - categorical columns: missing becomes the level `"Unknown"`, then one-hot with `handle_unknown="ignore"` (a new category at serving time becomes all zeros instead of a crash).
+#
+# Fit it on train and look at what it learned.
+
+# %%
+prep = build_preprocessor()
+Xt = prep.fit_transform(train_df[FEATURE_COLUMNS])
+names = prep.get_feature_names_out()
+print(Xt.shape, "->", len(names), "columns")
+pd.DataFrame(Xt[:3], columns=names).round(2).T.head(12)
+
+# %% [markdown]
+# Nine raw columns became a numeric matrix with no missing values. The proof that it learned from train only:
+
+# %%
+num_imputer = prep.named_transformers_["num"].named_steps["impute"]
+learned = num_imputer.statistics_[list(prep.transformers[0][2]).index("total_charges")]
+print("median total_charges learned from TRAIN:", learned)
+print("median over train + validation        :", pd.concat([train_df, val_df])["total_charges"].median())
+
+# %% [markdown]
+# The two differ slightly; in the pipeline validation rows are filled with the **train** number, exactly as live customers will be.
+# (`tests/test_features.py` asserts this with data where the gap is large.)
+
+# %% [markdown]
+# ## 4. Baselines
+#
+# Three reference points on the validation set: a model that knows nothing, a one-rule score, and logistic regression in the full pipeline.
+
+# %%
+X_train, y_train = train_df[FEATURE_COLUMNS], train_df[TARGET]
+X_val, y_val = val_df[FEATURE_COLUMNS], val_df[TARGET]
+
+def scores(y, p):
+    return {"roc_auc": roc_auc_score(y, p), "avg_precision": average_precision_score(y, p), "brier": brier_score_loss(y, p)}
+
+dummy = DummyClassifier(strategy="prior").fit(X_train, y_train)
+contract_rank = X_val["contract"].map({"Month-to-month": 2, "One year": 1, "Two year": 0}) / 2  # a crude rule-as-probability
+logit = build_pipeline(make_estimator("logistic", CFG["models"]["logistic"], 42)).fit(X_train, y_train)
+
+baselines = pd.DataFrame({
+    "predict the base rate": scores(y_val, dummy.predict_proba(X_val)[:, 1]),
+    "contract rule": scores(y_val, contract_rank),
+    "logistic pipeline": scores(y_val, logit.predict_proba(X_val)[:, 1]),
+}).T
+baselines.round(3)
+
+# %% [markdown]
+# Read it: the dummy has AUC 0.5 by construction; the contract rule already ranks well above chance; the logistic pipeline is better
+# still. (The rule's Brier score is meaningless because we invented its "probabilities"; AUC is the fair column for it.)
+# **This logistic pipeline is the project baseline.** Any fancier model has to beat it on validation *and* on cost.
+
+# %% [markdown]
+# ## 5. Do the engineered features earn their place?
+#
+# `features.engineer` can add two stateless columns: `is_first_year` and `charge_gap` (`total_charges - tenure * monthly_charges`). Whether to keep them is an
+# empirical question. A single validation score is noisy, so use 5-fold cross-validation **on the training rows** and compare mean and spread.
+
+# %%
+def cv_auc(pipe, X=X_train, y=y_train):
+    s = cross_val_score(pipe, X, y, cv=StratifiedKFold(5, shuffle=True, random_state=42), scoring="roc_auc")
+    return s.mean(), s.std()
+
+rows = {}
+for name in ("logistic", "hgb"):
+    for eng in (False, True):
+        mean, std = cv_auc(build_pipeline(make_estimator(name, CFG["models"][name], 42), engineered=eng))
+        rows[(name, "with engineered" if eng else "base features")] = {"cv_auc_mean": mean, "cv_auc_std": std}
+pd.DataFrame(rows).T.round(4)
+
+# %% [markdown]
+# The engineered features do **not** help: the differences are smaller than the fold-to-fold spread (`std`). That fits notebook 02, where we saw `total_charges`
+# is almost `tenure * monthly_charges`, so `charge_gap` is mostly noise, and tenure is already a feature so `is_first_year` adds little for a linear model.
+# This is a normal, useful outcome: **we keep the simpler model** (`features.engineer: false` in the config), and the code path stays available for you to extend.
+#
+# Also note the gradient-boosting model is not clearly better than logistic regression here. This dataset's signal is mostly additive, which a linear model captures well;
+# notebook 04 tests that properly.
+
+# %% [markdown]
+# ## 6. Sanity-check the learned coefficients
+# A linear model is easy to audit. The signs should agree with what notebook 02 showed.
+
+# %%
+feature_names = logit.named_steps["prep"].get_feature_names_out()
+coefs = pd.Series(logit.named_steps["model"].coef_[0], index=feature_names).sort_values()
+pd.concat([coefs.head(4), coefs.tail(4)]).round(2)
+
+# %% [markdown]
+# Coefficients are on standardised inputs, so their size is comparable across numeric columns. Positive = raises churn probability.
+# Month-to-month contracts, monthly charges and support calls push churn up; a two-year contract, longer tenure and autopay push it down,
+# all in line with notebook 02. If you saw the opposite signs, suspect a bug before believing the data.
+#
+# One surprise: fiber had by far the highest raw churn rate in notebook 02, yet its coefficient is small. A coefficient means "the effect of this column
+# **holding the others fixed**", and fiber customers also pay more:
+
+# %%
+train_df.groupby(train_df["internet_service"].fillna("Unknown"))["monthly_charges"].mean().round(1)
+
+# %% [markdown]
+# Much of the "fiber effect" is being carried by `monthly_charges`. Correlated columns share credit, so read individual coefficients with care
+# (notebook 05 uses permutation importance, which answers a different and often more useful question).
+
+# %% [markdown]
+# ## Common mistakes
+#
+# 1. **Fitting the scaler or imputer on the whole dataset** (`scaler.fit_transform(X)` before `train_test_split`). Use a `Pipeline`.
+# 2. **Comparing models on one validation number.** An AUC from 1,000 rows moves by a point or two between samples (bootstrap it and see); use CV and look at the spread.
+# 3. **Adding features until the score goes up.** Each try on the same validation set is a hidden look at it; keep a strict feature budget, or use CV on train only.
+# 4. **Leaving the id column in the features.** It is unique per row and can encode signup order.
+# 5. **One-hot encoding with `pd.get_dummies` on train and test separately.** The columns will not match. Use `OneHotEncoder(handle_unknown="ignore")` in the pipeline.
+
+# %% [markdown]
+# ## Interview corner
+#
+# **1. Why must preprocessing live in the pipeline?**
+# <details><summary>Answer</summary>
+# Because `fit` on data outside the training fold leaks information into validation scores and inflates them. A pipeline re-fits every step per fold
+# and guarantees that live data is transformed with the statistics learned at training time.
+# </details>
+#
+# **2. Logistic regression vs gradient boosting: when do you pick which?**
+# <details><summary>Answer</summary>
+# Start with logistic regression: fast, interpretable, well-calibrated, strong when effects are roughly additive. Move to boosting when validation shows
+# interactions or non-linearities it cannot capture, and keep the simpler model if the gain is within noise.
+# </details>
+#
+# **3. A new feature improves validation AUC by 0.004. Ship it?**
+# <details><summary>Answer</summary>
+# Probably not: compare against the cross-validation spread, consider the maintenance cost (every feature must be computed identically at serving time),
+# and check the business metric. Noise-level gains are not evidence.
+# </details>
+
+# %% [markdown]
+# ## Exercises
+
+# %% [markdown]
+# ### Exercise 1: Build the model matrices
+# From `train_df` and `val_df` create `X_tr, y_tr, X_va, y_va` using only `FEATURE_COLUMNS` for X (no id, no target) and `TARGET` for y.
+
+# %% tags=["starter"]
+X_tr, y_tr, X_va, y_va = ..., ..., ..., ...
+
+# %%
+assert list(X_tr.columns) == FEATURE_COLUMNS and list(X_va.columns) == FEATURE_COLUMNS, "use exactly FEATURE_COLUMNS, in order"
+assert "customer_id" not in X_tr.columns and TARGET not in X_tr.columns
+assert len(X_tr) == len(train_df) == len(y_tr) and len(X_va) == len(val_df) == len(y_va)
+assert set(y_tr.unique()) == {0, 1}
+print("Exercise 1 passed")
+
+# %% tags=["solution"]
+X_tr, y_tr = train_df[FEATURE_COLUMNS], train_df[TARGET]
+X_va, y_va = val_df[FEATURE_COLUMNS], val_df[TARGET]
+
+# %% [markdown]
+# ### Exercise 2: Reproduce the package's baseline
+# Fit a `build_pipeline(make_estimator("logistic", CFG["models"]["logistic"], 42))` on the training matrices and store its **validation ROC AUC** in `val_auc`.
+# The check runs the real training code on the same split and compares.
+
+# %% tags=["starter"]
+val_auc = ...
+
+# %%
+cfg_one = {**CFG, "selection": {**CFG["selection"], "candidates": ["logistic"]}}
+with tempfile.TemporaryDirectory() as tmp:
+    official = train.run_training(cfg_one, output_dir=tmp, df=df)["candidates"]["logistic"]["val_roc_auc"]
+assert abs(val_auc - official) < 1e-9, f"your {val_auc:.6f} vs package {official:.6f}: same pipeline, config and seed must give the same number"
+print(f"Exercise 2 passed (validation AUC {val_auc:.4f})")
+
+# %% tags=["solution"]
+model = build_pipeline(make_estimator("logistic", CFG["models"]["logistic"], 42)).fit(X_tr, y_tr)
+val_auc = roc_auc_score(y_va, model.predict_proba(X_va)[:, 1])
+
+# %% [markdown]
+# ### Exercise 3: Try a new feature
+# Hypothesis: customers who call support *often relative to how long they have been a customer* are unhappy. Write `my_engineer(X)` that returns a copy of `X`
+# with a new column `calls_per_month = support_calls / max(tenure_months, 1)` (and the two columns `engineer` adds, so keep calling `engineer` first).
+# Build a pipeline with `build_pipeline(estimator, engineered=True, engineer_fn=my_engineer, extra_numeric=["calls_per_month"])`, compute its 5-fold CV AUC on the
+# training rows with `cv_auc`, and store it in `cv_new`. Also store the base logistic pipeline's CV AUC (no engineering) in `cv_base`, and `keep = True` if the new feature
+# improves the mean CV AUC by **more than one fold standard deviation of the base model**, else `False`.
+
+# %% tags=["starter"]
+cv_new, cv_base, keep = ..., ..., ...
+
+# %%
+def _my(X):
+    X = engineer(X)
+    X["calls_per_month"] = X["support_calls"] / X["tenure_months"].clip(lower=1)
+    return X
+
+est = lambda: make_estimator("logistic", CFG["models"]["logistic"], 42)  # noqa: E731
+exp_new, _ = cv_auc(build_pipeline(est(), engineered=True, engineer_fn=_my, extra_numeric=["calls_per_month"]))
+exp_base, exp_base_std = cv_auc(build_pipeline(est()))
+assert abs(cv_new - exp_new) < 1e-9, f"cv_new should be {exp_new:.5f}"
+assert abs(cv_base - exp_base) < 1e-9, f"cv_base should be {exp_base:.5f}"
+assert keep == (exp_new - exp_base > exp_base_std)
+print(f"Exercise 3 passed: base {cv_base:.4f}, with feature {cv_new:.4f}, keep = {keep}")
+
+# %% tags=["solution"]
+def my_engineer(X):
+    X = engineer(X)
+    X["calls_per_month"] = X["support_calls"] / X["tenure_months"].clip(lower=1)
+    return X
+
+cv_new, _ = cv_auc(build_pipeline(make_estimator("logistic", CFG["models"]["logistic"], 42), engineered=True,
+                                  engineer_fn=my_engineer, extra_numeric=["calls_per_month"]))
+cv_base, base_std = cv_auc(build_pipeline(make_estimator("logistic", CFG["models"]["logistic"], 42)))
+keep = bool(cv_new - cv_base > base_std)
+
+# %% [markdown]
+# ### Exercise 4 (open-ended): Your feature, your evidence
+# Invent **one** more feature (an interaction such as `autopay == "No"` and month-to-month, a bucketed tenure, a price-per-call ratio ...). State the hypothesis in a
+# markdown cell, test it with `cv_auc` exactly as above, and write a two-sentence verdict. To ship it you would move the function into `src/churn/features.py` (a model built with a
+# notebook-only function cannot be reloaded elsewhere), add it to `ENGINEERED_COLUMNS`, and extend `tests/test_features.py`.
+
+# %% [markdown]
+# ## Recap
+# - Split first; the test set stays untouched until the final evaluation.
+# - Leakage is structural: a `Pipeline` re-fits preprocessing inside each training fold and reuses train statistics on new data.
+# - The project baseline is a logistic pipeline; judge every change against cross-validation spread, not a single score.
+# - Extra features must earn their place. Here they did not, so the simpler configuration is the default.
+#
+# **Go deeper:** scikit-learn user guide "Common pitfalls and recommended practices", and "Pipelines and composite estimators" (`ColumnTransformer`).
+#
+# **Next:** [Modelling, tuning and threshold selection](04_modelling_tuning_and_threshold_selection.ipynb)

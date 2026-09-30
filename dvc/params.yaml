@@ -1,0 +1,28 @@
+# UNVERIFIED SKETCH (DVC not installed here). Overlay merged over configs/config.yaml by
+# `python -m churn.train --params dvc/params.yaml`: DVC tracks exactly these keys, so changing
+# one re-runs training and nothing else does.
+split:
+  strategy: stratified
+  test_size: 0.20
+  val_size: 0.20
+  random_state: 42
+costs:
+  tn: 0.0
+  fp: 20.0
+  fn: 200.0
+  tp: 140.0
+features:
+  engineer: false
+selection:
+  metric: roc_auc
+  candidates: [logistic, hgb]
+models:
+  logistic:
+    C: 1.0
+    max_iter: 1000
+  hgb:
+    max_iter: 200
+    learning_rate: 0.05
+    max_depth: 4
+    min_samples_leaf: 40
+    l2_regularization: 1.0

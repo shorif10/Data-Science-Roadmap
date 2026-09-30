@@ -1,0 +1,43 @@
+visual,key,expected
+revenue_by_month,2023-06,15225.48
+revenue_by_month,2023-07,18956.31
+revenue_by_month,2023-08,18502.43
+revenue_by_month,2023-09,32169.2
+revenue_by_month,2023-10,35700.11
+revenue_by_month,2023-11,88030.5
+revenue_by_month,2023-12,120525.37
+revenue_by_month,2024-01,58689.19
+revenue_by_month,2024-02,61052.57
+revenue_by_month,2024-03,85762.58
+revenue_by_month,2024-04,90842.92
+revenue_by_month,2024-05,91197.2
+revenue_by_month,2024-06,113866.29000000001
+revenue_by_month,2024-07,86984.82
+revenue_by_month,2024-08,127925.47
+revenue_by_month,2024-09,129930.26
+revenue_by_month,2024-10,110345.57
+revenue_by_month,2024-11,219847.8
+revenue_by_month,2024-12,278334.81
+revenue_by_month,2025-01,68354.34
+revenue_by_month,2025-02,45766.29
+revenue_by_month,2025-03,61544.31
+revenue_by_month,2025-04,78198.52
+revenue_by_month,2025-05,82838.09
+revenue_by_category,Electronics,1045919.55
+revenue_by_category,Sports,378179.92
+revenue_by_category,Home,336130.95
+revenue_by_category,Fashion,268992.64
+revenue_by_category,Books,91367.37
+aov_by_channel,mobile,403.64251714005877
+aov_by_channel,store,404.4053488372093
+aov_by_channel,web,403.71947469325147
+top10_products,Monitor Pro,171757.04
+top10_products,Headphones Pro,136171.54
+top10_products,Webcam Basic,110955.72
+top10_products,Mouse Pro,97323.98
+top10_products,Speaker Basic,87521.65
+top10_products,Headphones Basic,78606.9
+top10_products,Dumbbell Pro,74143.68
+top10_products,Keyboard Pro,72856.95
+top10_products,Keyboard Basic,70656.3
+top10_products,Mouse Basic,65061.36

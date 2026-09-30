@@ -1,0 +1,16 @@
+# Build context for docker/Dockerfile is the project root: keep it small and free of secrets.
+.venv/
+.git/
+**/__pycache__/
+**/.ipynb_checkpoints/
+**/*.ipynb
+sources/
+legacy/
+datasets/
+artifacts/
+mlruns/
+tests/
+docs/
+[0-9][0-9]_*/
+.github/
+*.md

@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "churn"
+version = "1.0.0"
+description = "Customer churn prediction service: data validation, training, serving, drift monitoring."
+requires-python = ">=3.11"
+# Minimal runtime deps: everything needed to train and to predict.
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=3.0",
+    "scikit-learn>=1.6",
+    "scipy>=1.11",
+    "joblib>=1.3",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+serve = ["fastapi>=0.110", "uvicorn>=0.27", "pydantic>=2.5"]
+tracking = ["mlflow>=2.10"]
+dev = ["pytest>=8", "httpx>=0.27", "ruff>=0.5", "fastapi>=0.110", "uvicorn>=0.27", "pydantic>=2.5"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+# Lets `pytest` import the package straight from src/ without `pip install -e .`
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# Conservative rule set: ruff was not available offline while writing this, so it has not been run.
+select = ["E4", "E7", "E9", "F", "B"]

@@ -144,7 +144,7 @@ plt.show()
 
 # %% [markdown]
 # The contours are lines of equal `f`; the red gradient arrows cross them at right angles, pointing uphill and getting longer
-# where the surface is steeper. Walking *opposite* the arrows takes you down: that is gradient descent, the next-but-one notebook.
+# where the surface is steeper. Walking *opposite* the arrows takes you down: that is gradient descent, the topic of the next notebook.
 
 # %% [markdown]
 # ## 5. The chain rule: derivatives of compositions

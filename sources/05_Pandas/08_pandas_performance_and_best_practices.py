@@ -91,7 +91,7 @@ rev_slim = (slim["quantity"].astype("int64") * slim["unit_price"].astype("float6
 print(f"revenue big: {rev_big:,.2f} | slim: {rev_slim:,.2f} | relative difference: {abs(rev_big - rev_slim) / rev_big:.1e}")
 
 # %% [markdown]
-# Note the explicit casts in the check: multiplying `uint8` by `float32` could overflow or lose precision, the NumPy dtype traps from the NumPy module applying to pandas too.
+# Note the explicit casts in the check: arithmetic on narrow dtypes can wrap around (`uint8` times `uint8`) or lose precision (`float32` sums), the NumPy dtype traps from the NumPy module applying to pandas too.
 # **Reading only what you need** is the cheapest saving of all: `pd.read_csv(path, usecols=[...], dtype={...})` never loads the columns you drop.
 
 # %% [markdown]

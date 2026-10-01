@@ -200,7 +200,7 @@ print(CFG["gate"])
 # %% [markdown]
 # ## Common mistakes
 #
-# 1. **Optimising accuracy (or F1) because it is the default.** It ignores that a missed churner costs 10x a wasted offer.
+# 1. **Optimising accuracy (or F1) because it is the default.** It ignores that a missed churner (200) costs 10x a wasted offer (20); net of the offer and the save rate the gap is 60 vs 20, which is why the break-even is 0.25.
 # 2. **Threshold 0.5 by habit.** With these costs the break-even is 0.25; 0.5 silently throws away money.
 # 3. **Cost numbers nobody can trace.** Keep the derivation next to the matrix, as above.
 # 4. **No baseline.** an AUC figure means nothing until you know what a one-line business rule achieves.

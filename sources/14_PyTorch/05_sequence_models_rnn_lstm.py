@@ -248,7 +248,7 @@ plt.show()
 
 # %% [markdown]
 # *What just happened?* The LSTM clearly beats persistence and the seasonal baseline in MAE. Compare it with the **ridge** row as well: a linear model on the same window gets very close (the LSTM is only a few percent better), which says most of the
-# predictable structure is linear and the LSTM's extra machinery buys a modest gain. Always look at that row before claiming the recurrent model is "needed". The three seeds agree closely, so the gain is not luck.
+# predictable structure is linear and the LSTM's extra machinery buys a modest gain. Always look at that row before claiming the recurrent model is "needed". The three seeds agree closely with each other, but that only measures training noise: a gap this small on one test window would not necessarily hold on another, so do not treat it as a proven improvement over ridge.
 #
 # Look at the actual forecasts over three days of the test period:
 

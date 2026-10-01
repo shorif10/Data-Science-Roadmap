@@ -230,7 +230,7 @@ print(comparison.round(3).to_string())
 print(f"MLP seed-to-seed std: AUC {net_scores[:, 0].std():.4f}, accuracy {net_scores[:, 1].std():.4f}")
 
 # %% [markdown]
-# Read this table without wishful thinking. On 3,000 training rows of mostly-linear signal, **logistic regression is at least as good as the neural network**, and the network's seed-to-seed spread tells you the
+# Read this table without wishful thinking. On 3,000 training rows of mostly-linear signal, **logistic regression is about as good as the neural network (here marginally better)**, and the network's seed-to-seed spread tells you the
 # differences between the top models are small. Untuned gradient boosting can even trail, because it overfits easily on small data (see the depth-3 variant). This is typical: for tabular data, deep learning rarely
 # beats well-tuned gradient boosting or even a linear model unless the dataset is large or has special structure (text, images, sequences, high-cardinality categories). In a real project you would pick the simplest model
 # that meets the metric, not the most fashionable one. The PyTorch version earns its keep when you need a custom loss, multiple inputs (tabular plus text or images), or an end-to-end trainable pipeline.

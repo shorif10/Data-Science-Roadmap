@@ -298,7 +298,7 @@ summary
 # %% [markdown]
 # Read the table by column, not by row. `fact_in_context` caps `correct_answerable` for any honest generator: no reader can answer from text it
 # was not given, so a gap between them is a generation problem and a low value there is a retrieval problem. The `bad_generator` row shows how a
-# system can score well on retrieval and still be useless: only the *answer* and *citation* columns expose it.
+# system can score well on retrieval and still be useless: only the *answer* columns (`correct_answerable`, `held_on_adversarial`) expose it. Its `cited_gold` stays high because it always cites `[1]`, which is usually the right document: a citation that points at the right source does not prove the claim is supported by it (notebook 04's groundedness check looks inside the cited text).
 #
 # ### Slices: where did it fail?
 # Averages hide structure. Slice the results by the tags you put in the golden set.

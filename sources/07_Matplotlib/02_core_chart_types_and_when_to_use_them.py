@@ -11,7 +11,7 @@
 #
 # **Prerequisites:** [Anatomy of a figure](01_anatomy_figure_axes.ipynb).
 #
-# > Data used: `datasets/orders.csv`, `order_items.csv`, `products.csv` (synthetic shop) and `datasets/housing.csv` (synthetic house listings, with ~15 planted data-entry errors). See `docs/DATASETS.md`.
+# > Data used: `datasets/orders.csv`, `order_items.csv`, `products.csv` (synthetic shop) and `datasets/housing.csv` (synthetic house listings, with 15 planted data-entry errors; the simple filter below flags a few more, because any such rule is a judgement call). See `docs/DATASETS.md`.
 
 # %%
 from pathlib import Path

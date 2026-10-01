@@ -171,7 +171,7 @@ view.sort_values("share_of_category", ascending=False).head(3).round(3)
 # 1. Extract filters, then **data source filters**
 # 2. **Context filters**
 # 3. **`FIXED` LODs** are computed here
-# 4. **Dimension filters** (normal dimension filters, sets, conditional and Top N filters)
+# 4. **Dimension filters** (ordinary filters on dimension fields; sets, conditional and Top N filters have their own slots around here: check the official diagram)
 # 5. **`INCLUDE` / `EXCLUDE` LODs**, then aggregation of the view
 # 6. Measure filters
 # 7. **Table calculations**, then table-calc filters

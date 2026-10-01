@@ -52,7 +52,7 @@ atexit.register(shutil.rmtree, TMP, ignore_errors=True)
 
 # %% [markdown]
 # ## 2. Content-addressed storage: the core idea
-# Name every file by the **hash of its bytes** (SHA-256). Two consequences: identical content is stored **once** no matter how many times or under what name it appears, and a hash **cannot silently change**: if the bytes differ, the name differs. Git itself works this way.
+# Name every file by the **hash of its bytes** (SHA-256). Two consequences: identical content is stored **once** no matter how many times or under what name it appears, and a hash **cannot silently change**: if the bytes differ, the name differs. Git itself works this way. (Our mini store uses SHA-256; real DVC has used MD5 by default, so do not expect our hashes to match its files, and check its docs for the current hash setting.)
 # The data store keeps the bytes under `store/<first 2 hex>/<rest>`; git keeps only a tiny **pointer file** saying "data/churn.csv is version `ab12...`".
 
 # %%

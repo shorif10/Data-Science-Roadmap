@@ -110,7 +110,9 @@ with snowflake.connector.connect(
         df = cur.fetch_pandas_all()          # needs the pandas extra; column names come back UPPER CASE
         df.columns = df.columns.str.lower()
 
-    # writing a DataFrame back: bulk-loads through a stage (see notebook 04). Table/column names are matched in upper case.
+    # writing a DataFrame back: bulk-loads through a stage (see notebook 04). By default write_pandas quotes identifiers, so the
+    # DataFrame's column names are used exactly as given (case-sensitive): upper-case them for ordinary unquoted-style columns (verify `quote_identifiers` in the docs).
+    df.columns = df.columns.str.upper()
     ok, n_chunks, n_rows, _ = write_pandas(conn, df, table_name="CHANNEL_REVENUE", auto_create_table=True)
 
 # %% [markdown]

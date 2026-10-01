@@ -242,8 +242,10 @@ RLS_DAX = """
 -- role "US Managers": filter expression on table Customer
 [country] = "US"
 
--- dynamic security: a mapping table Manager(email, country) related to Customer
+-- dynamic security: a mapping table Manager(email, country), one country per manager
 [country] = LOOKUPVALUE ( Manager[country], Manager[email], USERPRINCIPALNAME () )
+-- if a manager may own several countries LOOKUPVALUE errors: instead relate Manager to Customer on country
+-- and put the filter  [email] = USERPRINCIPALNAME ()  on the Manager table (verify the pattern in the docs)
 """
 
 # %%

@@ -186,8 +186,8 @@ print(contract_cat.cat.categories.tolist(), "| ordered:", contract_cat.cat.order
 print("customers on a contract longer than month-to-month:", int((contract_cat > "Month-to-month").sum()))
 
 # %% [markdown]
-# The ordered comparison works only because we declared the order. Catch: categories can surprise you: `groupby` on a category column shows **empty groups** for unused categories
-# unless you pass `observed=True`, and assigning a value that is not among the categories raises an error.
+# The ordered comparison works only because we declared the order. Catch: categories can surprise you: `groupby` on a category column hides unused categories in pandas 3 (`observed=True` is now the default;
+# older versions listed them as **empty groups**, and `observed=False` brings that back), and assigning a value that is not among the categories raises an error.
 
 # %% [markdown]
 # ## 8. Binning numbers: `cut` and `qcut`
@@ -255,7 +255,7 @@ print(pd.cut(pd.Series([35]), [0, 35, 65]).astype(str).tolist(), "vs right=False
 #
 # **4. Why use the `category` dtype?**
 # <details><summary>Answer</summary>
-# Low-cardinality text is stored once as a lookup table plus integer codes, saving memory and speeding up grouping and comparisons; it also supports ordered categories. The trade-offs are stricter assignment rules and empty groups with <code>groupby</code> unless <code>observed=True</code>.
+# Low-cardinality text is stored once as a lookup table plus integer codes, saving memory and speeding up grouping and comparisons; it also supports ordered categories. The trade-offs are stricter assignment rules and the `observed` setting of <code>groupby</code> (pandas 3 hides unused categories by default; <code>observed=False</code> lists them as empty groups).
 # </details>
 
 # %% [markdown]

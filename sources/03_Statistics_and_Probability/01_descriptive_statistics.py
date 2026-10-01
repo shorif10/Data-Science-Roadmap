@@ -73,7 +73,7 @@ print(f"range = {x.max() - x.min():.0f}   std = {x.std():.1f}   IQR = {q3 - q1:.
 print(f"std predicted from IQR if normal: {0.7413 * (q3 - q1):.1f}   from MAD if normal: {1.4826 * mad:.1f}")
 
 # %% [markdown]
-# For normal data you would expect `std ~ 0.74 x IQR ~ 1.48 x MAD`; the cell below computes what that predicts. The actual std is noticeably larger: extreme rows inflate it, and a mismatch like this is a sign of a non-normal shape.
+# For normal data you would expect `std ~ 0.74 x IQR ~ 1.48 x MAD`; the cell above computes what that predicts. The actual std is noticeably larger: extreme rows inflate it, and a mismatch like this is a sign of a non-normal shape.
 #
 # **A classic trap: `n` vs `n-1`.** The *population* variance divides by `n`; the *sample* variance divides by `n-1` (Bessel's correction) because a sample's values sit closer to their own mean than to
 # the true mean, so dividing by `n` underestimates the spread. pandas defaults to `n-1` (`ddof=1`), NumPy to `n` (`ddof=0`).
@@ -140,7 +140,7 @@ comparison.round(1)
 # %% [markdown]
 # ## 5. Quantiles and outlier rules
 #
-# The `q`-th **quantile** is the value below which a fraction `q` of the data lies. Three go together as a "five number summary": min, Q1, median, Q3, max. A box plot draws exactly that.
+# The `q`-th **quantile** is the value below which a fraction `q` of the data lies. Five of them make up the "five number summary": min, Q1, median, Q3, max. A box plot draws exactly that.
 #
 # Two common outlier rules:
 # - **IQR rule (Tukey fences):** flag values below `Q1 - 1.5*IQR` or above `Q3 + 1.5*IQR`.

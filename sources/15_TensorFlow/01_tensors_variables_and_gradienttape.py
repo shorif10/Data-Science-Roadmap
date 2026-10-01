@@ -10,7 +10,7 @@
 # **You will learn**
 # - create and manipulate tensors, and move between tensors and NumPy arrays
 # - use `tf.Variable` for trainable state and understand why tensors are immutable
-# - compute gradients with `tf.GradientTape` and read the four ways it silently returns `None`
+# - compute gradients with `tf.GradientTape` and recognise the common ways it silently returns `None` (and the one that raises instead)
 # - fit a linear regression by hand with gradient descent and verify it against a closed-form solution
 #
 # **Prerequisites:** [NumPy arrays](../04_NumPy/), [PyTorch autograd](../14_PyTorch/) (helpful, not required),

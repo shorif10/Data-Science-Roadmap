@@ -56,6 +56,8 @@ legacy/             the original generator script (kept for reference; it did no
 python tools\build_notebooks.py 05_Pandas        # sources -> notebooks (and syntax check)
 python tools\check_notebooks.py 05_Pandas        # execute them end to end, exercises solved
 python tools\check_notebooks.py                  # everything
+python tools\audit_notebooks.py structure      # sections, links, solution cells (fast)
+python tools\audit_notebooks.py discriminate    # every exercise check must FAIL when left unsolved (slow)
 ```
 
 To add a notebook, write `sources/<module>/<NN_name>.py` following [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md), then build

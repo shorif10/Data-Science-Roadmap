@@ -46,6 +46,8 @@ DATA = Path("../datasets")
 # * **DAG**: the set of tasks and their dependencies. **Task**: one unit of work. **Operator**: a task template (run SQL, run Python, call an API); with the TaskFlow API a Python function decorated with `@task` is a task.
 # * **Schedule and logical date**: a daily DAG produces one **run per data interval**. The run for the interval `[2025-01-01, 2025-01-02)` has logical date `2025-01-01` and starts **after** that interval has ended.
 #   Your code should compute *for that date*, never for "now".
+#   (This is the classic data-interval behaviour. Airflow 3 changed the default for plain cron-style schedules such as `@daily` to a trigger-style timetable that runs *at* the cron time; the data-interval
+#   behaviour is still available. Check the timetable docs for the version you deploy. The discipline is the same either way: derive everything from the run's date, not the clock.)
 # * **Catchup / backfill**: create the runs for past intervals that never ran.
 # * **Retries** with delay; **trigger rules** ("run only if all upstream succeeded" is the default; `all_done` runs a cleanup or notification whatever happened).
 # * **XCom**: tiny values passed between tasks. Pass *paths or ids*, never DataFrames.
@@ -231,7 +233,7 @@ print(f"wall time {wall:.2f}s | sum of task times {sum(r.seconds for r in res.va
 summary(res)
 
 # %% [markdown]
-# *What just happened?* The two extracts each sleep 0.2 s but the whole DAG took barely more than 0.2 s of wall time, because the runner started both as soon as they were ready (they have no dependencies). The
+# *What just happened?* The two extracts each sleep 0.2 s but the wall time printed above is well below the sum of the task times (the two extracts overlapped), because the runner started both as soon as they were ready (they have no dependencies). The
 # `finished_order` column shows the dependency order was respected, and `publish` received the revenue via `ctx.inputs`.
 
 # %% [markdown]
@@ -409,7 +411,7 @@ for p in lint_dag_source(bad_dag):
 # With Airflow installed, you would validate and run the real file from a shell:
 #   airflow dags list-import-errors                 # does every DAG file import?
 #   airflow dags test shop_daily 2025-05-30          # run one logical date locally, in-process
-#   airflow dags backfill shop_daily -s 2025-01-01 -e 2025-01-31    # explicit backfill (CLI details differ between Airflow versions)
+#   airflow dags backfill shop_daily -s 2025-01-01 -e 2025-01-31    # explicit backfill in Airflow 2; Airflow 3 moved it to a separate `airflow backfill create ...` command (verify in the CLI docs of your version)
 
 # %% [markdown]
 # ## 5. Airflow, Prefect, Dagster: how they differ

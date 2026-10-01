@@ -307,12 +307,20 @@ async def shop_session(extra_src: str = "", logging_callback=None):
     path.write_text(source, encoding="utf-8")
     params = StdioServerParameters(command=sys.executable, args=[str(path)],
                                    env={"SHOP_DB": str(DB), "KB_DIR": str(KB)})
-    with open(WORK / f"stderr_{tag}.txt", "a", encoding="utf-8") as errlog:
-        async with stdio_client(params, errlog=errlog) as (read, write):
-            async with ClientSession(read, write, read_timeout_seconds=30,
-                                     logging_callback=logging_callback) as session:
-                await session.initialize()
-                yield session
+    try:
+        with open(WORK / f"stderr_{tag}.txt", "a", encoding="utf-8") as errlog:
+            async with stdio_client(params, errlog=errlog) as (read, write):
+                async with ClientSession(read, write, read_timeout_seconds=30,
+                                         logging_callback=logging_callback) as session:
+                    await session.initialize()
+                    yield session
+    except BaseExceptionGroup as group:
+        # anyio wraps any error raised inside the block in an ExceptionGroup, which Jupyter prints but does
+        # not report as a failed cell. Re-raise the real error so your assert failures look like normal ones.
+        err = group
+        while isinstance(err, BaseExceptionGroup):  # one group per task group (stdio + session): unwrap them all
+            err = err.exceptions[0]
+        raise err from None
 
 
 async with shop_session() as s:
@@ -517,7 +525,7 @@ assert alive_inside and not psutil.pid_exists(pid)
 # 7. **Not testing through a real client.** Calling your function directly skips schema generation, validation and serialisation, where many bugs live.
 # 8. **Assuming the server inherits your environment.** `stdio_client` passes a restricted default environment plus `StdioServerParameters(env=...)`; a missing variable shows up as a server crash at start-up.
 
-# %%
+# %% tags=["expect-traceback"]
 # Demonstration of mistake 8: the server needs SHOP_DB, we forgot to pass it
 broken = WORK / "broken_server.py"
 broken.write_text(SERVER_BASE + SERVER_FOOTER, encoding="utf-8")
@@ -616,11 +624,13 @@ async def kb_search(session, word):
     ...
 
 # %%
+words = ["refund", "PREMIUM", "warehouse", "zzz-not-there"]
 async with shop_session() as s:
-    for word in ["refund", "PREMIUM", "warehouse", "zzz-not-there"]:
-        got = await kb_search(s, word)
-        want = sorted(p.stem for p in KB.glob("*.md") if word.lower() in p.read_text(encoding="utf-8").lower())
-        assert got == want, f"{word!r}: expected {want}, got {got}"
+    answers = {word: await kb_search(s, word) for word in words}
+# assert AFTER the session closes: an assertion raised inside an async context manager is shown by Jupyter as plain text
+for word, got in answers.items():
+    want = sorted(p.stem for p in KB.glob("*.md") if word.lower() in p.read_text(encoding="utf-8").lower())
+    assert got == want, f"{word!r}: expected {want}, got {got}"
 print("Exercise 2 passed")
 
 # %% tags=["solution"]
@@ -675,14 +685,19 @@ async def safe_call(session, name, args):
 
 # %%
 async with shop_session() as s:
-    ok, text = await safe_call(s, "order_count", {"status": "delivered"})
-    assert ok is True and text.strip() == str(int((orders["status"] == "delivered").sum())), (ok, text)
-    ok, text = await safe_call(s, "order_count", {"status": "nope"})
-    assert ok is False and text, "schema violations must come back as (False, message)"
-    ok, text = await safe_call(s, "no_such_tool", {})
-    assert ok is False and text, "unknown tools must come back as (False, message)"
-    ok, text = await safe_call(s, "customer_lookup", {"customer_id": 10**9})
-    assert ok is False and "no customer" in text
+    r_good = await safe_call(s, "order_count", {"status": "delivered"})
+    r_schema = await safe_call(s, "order_count", {"status": "nope"})
+    r_unknown = await safe_call(s, "no_such_tool", {})
+    r_missing = await safe_call(s, "customer_lookup", {"customer_id": 10**9})
+# assert AFTER the session closes (see exercise 2): safe_call must return an (ok, text) pair every time
+ok, text = r_good
+assert ok is True and text.strip() == str(int((orders["status"] == "delivered").sum())), (ok, text)
+ok, text = r_schema
+assert ok is False and text, "schema violations must come back as (False, message)"
+ok, text = r_unknown
+assert ok is False and text, "unknown tools must come back as (False, message)"
+ok, text = r_missing
+assert ok is False and "no customer" in text
 print("Exercise 4 passed")
 
 # %% tags=["solution"]

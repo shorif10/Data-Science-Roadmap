@@ -179,7 +179,7 @@ print("index sizes are not shown here, but list them with PRAGMA index_list:", q
 # rely on partitioning/clustering instead. Row stores (Postgres, MySQL, SQL Server, SQLite) are where index design matters most.
 #
 # One more honest trade-off: an index on a **low-selectivity** column (few distinct values, like `event_type` with five values) is a poor deal when you fetch a large fraction of the table:
-# hopping through the index to millions of scattered row locations can cost *more* than one sequential scan. Compare the measured times below.
+# hopping through the index to hundreds of thousands of scattered row locations can cost *more* than one sequential scan. Compare the measured times below.
 
 # %%
 low = "SELECT * FROM events WHERE event_type = 'view'"

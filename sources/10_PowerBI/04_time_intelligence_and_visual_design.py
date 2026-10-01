@@ -127,21 +127,24 @@ full = pd.period_range("2023-01", "2025-12", freq="M")
 rev_full = rev.reindex(full)                                              # months without data stay NaN (BLANK)
 ytd_naive = rev_full.fillna(0).groupby(rev_full.index.year).cumsum()      # what an unguarded YTD shows
 last_sales_month = orders["order_date"].max().to_period("M")
-ytd_guarded = ytd_naive.where(ytd_naive.index <= last_sales_month)        # DAX: IF ( MAX('Date'[date]) <= MAX(Sales[order_date]), [YTD] )
+ytd_guarded = ytd_naive.where(ytd_naive.index <= last_sales_month)        # DAX: IF ( MAX('Date'[date]) <= EOMONTH(last sale date, 0), [YTD] )
 cmp = pd.DataFrame({"naive_ytd": ytd_naive, "guarded_ytd": ytd_guarded}).loc["2025-04":"2025-08"]
 cmp.round(0)
 
 # %% tags=["no-run"]
 DAX_GUARD = """
 Net Revenue YTD (guarded) =
-    IF ( MAX ( 'Date'[date] ) <= MAX ( Sales[order_date] ),   -- MAX over the date table in context vs the last fact date (use ALL(Sales) if needed; verify)
-         TOTALYTD ( [Net Revenue], 'Date'[date] ) )
+    -- last date that has any sales, computed with ALL on both tables so the visual's filters cannot shrink it
+    VAR LastSaleDate = CALCULATE ( MAX ( Sales[order_date] ), ALL ( Sales ), ALL ( 'Date' ) )
+    RETURN
+        IF ( MAX ( 'Date'[date] ) <= EOMONTH ( LastSaleDate, 0 ),   -- compare with the end of that month, so the last (partial) month still shows
+             TOTALYTD ( [Net Revenue], 'Date'[date] ) )
 """
 
 # %% [markdown]
 # ### Trap 2: role-playing dates and `USERELATIONSHIP`
-# Customers have a `signup_date`, also a date. The model can have **one active** relationship between `Customer` and `Date`... but the *orders* already use the active one from `Sales[order_date]`. You create a second, **inactive**
-# relationship `Customer[signup_date] -> Date[date]` and activate it inside a measure. Expected values by signup month:
+# Customers have a `signup_date`, also a date. The model's active date path already runs `Date[date] -> Sales[order_date]`; a second active path `Date -> Customer -> Sales` would be ambiguous, so you create the
+# relationship `Date[date] -> Customer[signup_date]` as **inactive** and activate it inside a measure. Expected values by signup month:
 
 # %%
 new_by_month = customers.assign(m=customers["signup_date"].dt.to_period("M")).groupby("m")["customer_id"].nunique()

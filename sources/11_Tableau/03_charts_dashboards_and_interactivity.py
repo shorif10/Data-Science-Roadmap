@@ -142,7 +142,7 @@ print(f"median order {order_value.median():.0f}, mean {order_value.mean():.0f}, 
 # %% [markdown]
 # ## 7. Top N + "Other": make the pieces add up
 # A Top N filter **removes** the rest, so a bar chart of the top 5 countries no longer sums to the total and percent-of-total calculations silently use the wrong denominator. Stakeholders want to see "everyone else" too.
-# Note from notebook 02: a Top N (dimension-type) filter is applied after `FIXED` LODs, so a FIXED denominator is still the whole table.
+# Note: where a Top N filter sits relative to `FIXED` LODs is set by Tableau's order of operations (notebook 02; check the official diagram for your version), so test any denominator that must stay the whole table.
 # pandas: rank, keep the top N, and sum the rest into one row.
 
 # %%

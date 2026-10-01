@@ -337,7 +337,7 @@ print("Bob now has notes.md:", (bob / "notes.md").exists())
 # 2. **One giant commit** ("stuff") at the end of the week. Small commits are reviewable, revertable and bisectable.
 # 3. **Committing on `main` directly** in a team repo, or force-pushing (`git push --force`) a branch others use. Force-push rewrites
 #    shared history; if you must, use `--force-with-lease` on your own branch only.
-# 4. **Detached HEAD.** `git switch <commit-hash>` puts you on no branch; commits made there are easy to lose. Make a branch
+# 4. **Detached HEAD.** `git switch --detach <commit-hash>` (or `git checkout <commit-hash>`) puts you on no branch; commits made there are easy to lose. Make a branch
 #    (`git switch -c rescue`) before you continue.
 # 5. **Assuming `git rm` or a new commit erases a secret.** It stays in history (shown above).
 

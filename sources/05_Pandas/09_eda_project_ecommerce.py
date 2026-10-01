@@ -129,7 +129,7 @@ print((q_share * 100).round(1).to_string())
 print("largest quarter-to-quarter change in any category share (percentage points):", round(float(q_share.diff().abs().max().max() * 100), 1))
 
 # %% [markdown]
-# The shares are quite stable across quarters, so the revenue growth is spread across all categories rather than driven by one. (Stable share also means the seasonal peak is *not* a category story.)
+# The shares are quite stable across quarters (the one big swing, 2023Q2 to 2023Q3, compares against a first quarter that contains only June 2023), so the revenue growth is spread across all categories rather than driven by one. (Stable share also means the seasonal peak is *not* a category story.)
 
 # %% [markdown]
 # ## Step 4. Premium vs non-premium customers

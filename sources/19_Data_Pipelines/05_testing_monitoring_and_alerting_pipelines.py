@@ -136,7 +136,7 @@ print(sorted(p.relative_to(PKG).as_posix() for p in PKG.rglob("*.py")))
 '''))
 
 def run_pytest(args=()):
-    proc = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header", *args],
+    proc = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header", "--color=no", *args],
                           cwd=PKG, capture_output=True, text=True, timeout=120, env={**__import__("os").environ, "PYTHONPATH": str(PKG), "PYTHONDONTWRITEBYTECODE": "1"})
     return proc.returncode, proc.stdout
 

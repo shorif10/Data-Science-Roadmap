@@ -73,9 +73,9 @@ CREATE OR REPLACE FILE FORMAT ff_csv
 CREATE OR REPLACE FILE FORMAT ff_parquet TYPE = PARQUET;
 
 -- 2. a named internal stage using that format
-CREATE OR REPLACE STAGE shop_stage FILE_FORMAT = ff_csv;
+CREATE OR REPLACE STAGE shop_stage FILE_FORMAT = (FORMAT_NAME = ff_csv);
 
--- 3. upload local files (PUT runs from SnowSQL or a connector session, not from the web worksheet; verify in docs)
+-- 3. upload local files (PUT runs from SnowSQL or a connector session, not from the web worksheet; give an absolute local path; verify in docs)
 PUT file://exports/order_lines.csv @shop_stage AUTO_COMPRESS = TRUE;
 LIST @shop_stage;
 

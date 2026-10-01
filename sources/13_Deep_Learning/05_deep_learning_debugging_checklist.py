@@ -171,11 +171,11 @@ plt.show()
 
 # %%
 torch.manual_seed(0)
-Xraw_tr = torch.tensor(train_test_split(X_raw, test_size=0.3, random_state=42, stratify=y_all)[0] * 10, dtype=torch.float32)   # pixels 0..1600: badly scaled
+Xraw_tr = torch.tensor(train_test_split(X_raw, test_size=0.3, random_state=42, stratify=y_all)[0] * 10, dtype=torch.float32)   # pixels 0..160: badly scaled
 experiments = {
     "healthy": lambda: train(make_model(), X_tr, y_tr),
     "learning rate too small (1e-5)": lambda: train(make_model(), X_tr, y_tr, lr=1e-5),
-    "inputs not scaled (range 0-1600)": lambda: train(make_model(), Xraw_tr, y_tr),
+    "inputs not scaled (range 0-160)": lambda: train(make_model(), Xraw_tr, y_tr),
     "no zero_grad (gradients pile up)": lambda: train(make_model(), X_tr, y_tr, zero_grad=False),
     "softmax before CrossEntropyLoss": lambda: train(make_model(), X_tr, y_tr, softmax_first=True),
 }
@@ -260,9 +260,9 @@ print("lr=0.1, raw inputs    :", [f"{v:.1e}" for v in exploded[:5]], "...", expl
 print("first non-finite step :", next((i for i, v in enumerate(exploded) if not np.isfinite(v)), None))
 
 fix_small_lr = fit_line(xs, ys, lr=1e-5)
-fix_scaled = fit_line(xs / 100.0, ys, lr=0.1)
+fix_scaled = fit_line((xs - xs.mean()) / xs.std(), ys, lr=0.3)   # standardised inputs
 print(f"fix A (lr=1e-5, raw inputs): final loss {fix_small_lr[-1]:.1f}  (stable but slow)")
-print(f"fix B (inputs/100, lr=0.1) : final loss {fix_scaled[-1]:.1f}  (stable and fast: scaling is the real cure)")
+print(f"fix B (standardised, lr=0.3): final loss {fix_scaled[-1]:.1f}  (stable and fast: scaling is the real cure)")
 
 # %% [markdown]
 # Two tools for the general case. **Gradient clipping** caps the size of each update (`clip_grad_norm_`), which contains occasional spikes, for example in recurrent networks. It is a safety belt, not a fix for a wildly
@@ -275,7 +275,7 @@ for name, kw in [("lr=50, no clipping", dict(lr=50.0)), ("lr=50, clip norm 1.0",
     print(f"{name:22s} final loss {l:8.3f}   val accuracy {a:.1%}")
 
 # %% [markdown]
-# Clipping does not rescue a learning rate that is 500x too large; it only limits the damage. The second tool finds **where** a `nan` first appears. `torch.autograd.detect_anomaly` makes the backward
+# Clipping does not rescue a learning rate that is 500x too large (both runs stay at chance); it only bounds the size of each update, which helps against occasional spikes, not against a wrong rate. The second tool finds **where** a `nan` first appears. `torch.autograd.detect_anomaly` makes the backward
 # pass raise an error naming the operation that produced it (slow, so only while debugging):
 
 # %%

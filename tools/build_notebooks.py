@@ -28,7 +28,7 @@ import ast
 import json
 import re
 import sys
-import uuid
+import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -84,8 +84,8 @@ def _lines(src: str):
 
 def build_notebook(cells) -> dict:
     nb_cells = []
-    for ctype, src, tags in cells:
-        cell = {"id": uuid.uuid4().hex[:8], "cell_type": ctype, "metadata": {}, "source": _lines(src)}
+    for idx, (ctype, src, tags) in enumerate(cells):
+        cell = {"id": hashlib.sha1(f"{idx}:{src}".encode()).hexdigest()[:8], "cell_type": ctype, "metadata": {}, "source": _lines(src)}
         if tags:
             cell["metadata"]["tags"] = list(tags)
         if "solution" in tags:

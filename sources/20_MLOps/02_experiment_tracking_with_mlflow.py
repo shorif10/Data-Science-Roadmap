@@ -248,6 +248,7 @@ pipe.fit(X_train, y_train)            # params, training metrics and a few diagn
 #   mlflow server --backend-store-uri postgresql://user:pass@db:5432/mlflow \
 #                 --default-artifact-root s3://my-bucket/mlflow-artifacts --host 0.0.0.0 --port 5000
 # and every teammate then does:  mlflow.set_tracking_uri("http://tracking-host:5000")
+# (Do not expose such a server to the internet as is: put it behind TLS and authentication, and keep the database credentials out of shell history. Check the MLflow docs for the auth options of your version.)
 
 # %% [markdown]
 # ## What to log (a checklist)

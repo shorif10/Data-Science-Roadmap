@@ -92,7 +92,7 @@ sim_a = summarise([scenario_a(w) for w in range(10)])
 sim_a.round(3)
 
 # %% [markdown]
-# Drift fires (the status goes from `ok` to `alert` in the first week of the shift, and PSI keeps growing) as the price rises. Now look at the AUC column: the ranking barely moves. That is not a bug in the monitor. In this
+# Drift fires (the status goes from `ok` to `alert` in the first week of the shift, and PSI keeps growing) as the price rises. (Week 4 shows how the status works: its PSI is only in the "moderate" band, but the KS statistic crosses its own 0.10 threshold, and either one is enough for `alert`.) Now look at the AUC column: the ranking barely moves. That is not a bug in the monitor. In this
 # synthetic data the labels do not depend on price in a way the model would miss, so a shift in `monthly_charges` moves the inputs without hurting the ranking (the `mean_pred`
 # column shows scores do creep up). **An alert is a reason to look, not a reason to retrain blindly.** In a real business a price rise often *does* change behaviour; only labels can tell you.
 

@@ -288,7 +288,7 @@ review_tokens = [t for toks in tok_reviews for t in toks if t.isalpha()]
 seen_words = sorted(set(review_tokens))
 for n_merges in (30, 150, 400):
     m = learn_bpe(review_tokens, n_merges)
-    whole = sum(len(bpe_encode(w, m)) == 2 or len(bpe_encode(w, m)) == 1 for w in seen_words)  # one piece (+ maybe a lone </w>)
+    whole = sum(len([p for p in bpe_encode(w, m) if p != "</w>"]) == 1 for w in seen_words)  # exactly one piece (a trailing lone </w> marker does not count)
     print(f"{n_merges:3d} merges: {whole} of {len(seen_words)} distinct review words are a single piece")
 merges = learn_bpe(review_tokens, 150)  # try 400 and watch "great" become one piece
 for w in ["great", "greatness", "unbelievably", "packaging", "packagings"]:
@@ -296,7 +296,7 @@ for w in ["great", "greatness", "unbelievably", "packaging", "packagings"]:
 
 # %% [markdown]
 # With few merges most words are still several pieces; with more merges the frequent words become single tokens. `greatness`, which never occurs, is encoded from the pieces of `great` plus leftovers,
-# and `unbelievably` (not in the corpus at all) falls back to short pieces and characters. Only 84 distinct words occur in these templated reviews, so the learned pieces reflect the templates.
+# and `unbelievably` (not in the corpus at all) falls back to short pieces and characters. Only about 85 distinct words occur in these templated reviews, so the learned pieces reflect the templates.
 # Real tokenisers are trained on billions of words, so their pieces reflect real morphology.
 
 # %% [markdown]

@@ -53,7 +53,7 @@ print("P(exactly 3 of 10, p=0.3) =", round(stats.binom.pmf(3, 10, 0.3), 4))
 # %% [markdown]
 # ## 1. Normal: what you get when many small effects add up
 #
-# Bell-shaped, defined by a mean `mu` and standard deviation `sigma`. It arises from sums and averages of many independent contributions (the central limit theorem, next-but-one notebook).
+# Bell-shaped, defined by a mean `mu` and standard deviation `sigma`. It arises from sums and averages of many independent contributions (the central limit theorem, covered in the next notebook).
 # The **68-95-99.7 rule** says about that share of values lies within 1, 2 and 3 standard deviations of the mean. Sensor power draw looks like a natural candidate, so fit a normal to it and test how well it actually fits.
 
 # %%

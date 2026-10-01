@@ -136,7 +136,7 @@ print(f"CNN: {cnn.count_params():,} parameters | validation accuracy {accuracy(c
 print(f"MLP: {mlp.count_params():,} parameters | validation accuracy {accuracy(mlp, X_va, y_va):.3f}")
 
 # %% [markdown]
-# *What just happened?* The CNN reaches a similar or better accuracy with far fewer parameters. On a 360-image validation set one image is
+# *What just happened?* The CNN reaches a similar accuracy with about half the parameters. On a 360-image validation set one image is
 # 0.28 percentage points, so a difference of a few images is noise. Do not claim a winner from one run; section 4 repeats the comparison over seeds.
 
 # %% [markdown]
@@ -225,15 +225,15 @@ pd.DataFrame(rows).set_index("model").round(3)
 
 # %% [markdown]
 # *What just happened?* We changed the deployment conditions and measured. A model's validation accuracy describes only data that looks like the
-# validation set. Expect every model to lose some accuracy under the shift, and the augmented CNN to lose the least (check the table: if it does not, say so).
+# validation set. Expect every model to lose accuracy under the shift. Compare both the drop and the absolute shifted accuracy: a model that started lower can lose less and still not be better, so read the table instead of assuming augmentation wins.
 
 # %% [markdown]
 # ## 5. Error analysis on the test set
 #
-# Accuracy hides *which* digits fail. We pick the augmented CNN, evaluate it on the test set **once**, and open up the mistakes.
+# Accuracy hides *which* digits fail. We analyse the plain CNN (it beat its augmented variant on validation; the MLP is within noise of it but is not the architecture under study), evaluate it on the test set **once**, and open up the mistakes.
 
 # %%
-proba = cnn_aug.predict(X_te, verbose=0)
+proba = cnn.predict(X_te, verbose=0)
 pred = proba.argmax(axis=1)
 print(f"test accuracy: {(pred == y_te).mean():.3f} on {len(y_te)} images -> {(pred != y_te).sum()} mistakes")
 

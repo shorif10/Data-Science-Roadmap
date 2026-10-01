@@ -83,7 +83,7 @@ From the project root (`Data-Science-Roadmap`). Replace `.venv\Scripts\python` w
 # one-time: generate data (skip if datasets\churn.csv exists)
 .venv\Scripts\python datasets\make_datasets.py
 
-# tests (about 20 seconds; nothing is written into the repository)
+# tests (under a minute; nothing is written into the repository)
 .venv\Scripts\python -m pytest tests -q -p no:cacheprovider
 
 # train: writes artifacts\model\{model.joblib, metrics.json, model_card.md, reference.csv}

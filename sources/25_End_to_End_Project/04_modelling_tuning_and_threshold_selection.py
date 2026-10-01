@@ -72,7 +72,7 @@ lo, hi = np.percentile(diffs, [2.5, 97.5])
 print(f"AUC(hgb) - AUC(logistic): 95% bootstrap interval [{lo:.3f}, {hi:.3f}]")
 
 # %% [markdown]
-# If the interval contains 0, you cannot say one model is better. When two models tie, **pick the simpler one** (cheaper to serve, easier to explain, better calibrated by default).
+# If the interval contains 0, you cannot say one model is better; if it lies entirely at or below 0 (as here, or nearly), boosting is not better and may be slightly worse. When two models tie, **pick the simpler one** (cheaper to serve, easier to explain, better calibrated by default).
 
 # %% [markdown]
 # ## 2. Tuning with restraint
@@ -145,7 +145,7 @@ for _ in range(200):
 print(f"chosen {t_best:.2f}; bootstrap 5th-95th percentile: {np.percentile(boot, 5):.2f} to {np.percentile(boot, 95):.2f}")
 
 # %% [markdown]
-# Expect a spread of several hundredths. The right reading: "flag customers above roughly 0.2 to 0.3", not "0.26 is exactly optimal". Because the cost curve is flat there, the
+# Expect a spread of several hundredths. The right reading: "flag customers above roughly 0.2 to 0.3", not "the argmin is exactly optimal". Because the cost curve is flat there, the
 # cost difference between thresholds inside that band is small, which is why a slightly imprecise threshold is not a disaster. More validation data (or cross-validated predictions) narrows it.
 
 # %% [markdown]
@@ -169,8 +169,9 @@ sensitivity.round(3)
 # %% [markdown]
 # Two lessons in one table:
 # 1. **The threshold rises with the offer cost**: an expensive offer means you can only afford to contact people who are quite likely to leave.
-# 2. **The model's value depends on the costs, not only on its AUC.** When offers are cheap, "contact everybody" is almost as good as any model
-#    (look at the last column shrink). The model earns its keep when contacting has a real cost. A stakeholder who says "just call everyone" may be right at the cheap end.
+# 2. **The model's value depends on the costs, not only on its AUC.** Look at the last column: it is small at BOTH ends. When offers are very cheap, "contact everybody"
+#    is almost as good as any model; when they are very expensive, "contact nobody" is almost as good. The model earns most in the middle, where contacting has a real
+#    cost but is still worth it for the right customers. A stakeholder who says "just call everyone" may be right at the cheap end.
 #    Report this sensitivity, not one number.
 
 # %% [markdown]

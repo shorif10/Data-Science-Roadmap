@@ -63,13 +63,13 @@ print("the first and last period may be partial:", weekly.index[0].date(), "..."
 # The sensor file has dropouts: hours with no temperature. If you fill them (or let the line interpolate silently), the chart claims knowledge you do not have. Matplotlib breaks a line at `NaN`, which is exactly the honest behaviour.
 
 # %%
-first_week = sensors.loc["2024-01-01":"2024-06-30"]
-gaps = first_week.temperature_c.isna()
+first_half = sensors.loc["2024-01-01":"2024-06-30"]
+gaps = first_half.temperature_c.isna()
 print("missing temperature hours:", int(gaps.sum()), "| longest run of consecutive missing hours:", int(gaps.groupby((~gaps).cumsum()).sum().max()))
 
 fig, ax = plt.subplots(figsize=(10, 3.4), layout="constrained")
-ax.plot(first_week.index, first_week.temperature_c, linewidth=0.6)
-ax.plot(first_week.index, first_week.temperature_c.interpolate(), linewidth=0.6, color="red", alpha=0.25, label="interpolated (hides dropouts)")
+ax.plot(first_half.index, first_half.temperature_c, linewidth=0.6)
+ax.plot(first_half.index, first_half.temperature_c.interpolate(), linewidth=0.6, color="red", alpha=0.25, label="interpolated (hides dropouts)")
 ax.set(title="Hourly temperature: dropouts appear as gaps", xlabel="Date", ylabel="Temperature (deg C)")
 ax.legend()
 plt.show()

@@ -490,7 +490,7 @@ print()
 render(tracer.spans)
 
 # %% [markdown]
-# *What just happened?* One trace, seven spans: the run, two model calls (with stop reason and token counts), and two tool calls nested under the run. Reading the tree answers the first three incident questions: *how many steps?* *which tool was slow or failing?* *what did the tokens go to?*
+# *What just happened?* One trace, five spans: the run, two model calls (with stop reason and token counts), and two tool calls nested under the run. Reading the tree answers the first three incident questions: *how many steps?* *which tool was slow or failing?* *what did the tokens go to?*
 # Timings here are on the simulated clock, so they are exactly reproducible; real runs use the real clock.
 #
 # ## 6. Cost and latency accounting

@@ -76,7 +76,7 @@ for method in ("pearson", "spearman"):
     print(f"{method:8s} area vs price: {homes.area_sqft.corr(homes.price, method=method):.3f}")
 
 # %% [markdown]
-# Spearman is a bit higher because price rises monotonically but curves upward, and ranks ignore the curvature. Only read colours as "strength", never as "importance": a column with low correlation can still matter in a model through interactions.
+# The two numbers are close (here Spearman is slightly *lower*), so the link is strong and close to a monotone straight-ish trend; Spearman pulls ahead of Pearson only when the relationship is monotone but strongly curved, or when outliers drag Pearson around, because ranks ignore magnitudes. Only read colours as "strength", never as "importance": a column with low correlation can still matter in a model through interactions.
 
 # %% [markdown]
 # ## 2. A heatmap of a pivot table

@@ -51,7 +51,7 @@ for how in ["inner", "left", "right", "outer"]:
 # | `right` | mirror of left | rarely; swap the tables and use `left` |
 # | `outer` | keys in **either** | reconciling two lists |
 #
-# *What just happened?* Ben appears only on the left, Dan (id 4) only on the right. `left` keeps Ben with `NaN`; `inner` drops both; `outer` keeps everyone.
+# *What just happened?* Ana (id 1) appears only on the left, id 4 only on the right. `left` keeps Ana with `NaN`; `inner` drops both unmatched rows; `outer` keeps everyone.
 # When you add columns to a main table, a **left join preserves its row count** (if the right key is unique), which is why it is the safe default.
 
 # %% [markdown]

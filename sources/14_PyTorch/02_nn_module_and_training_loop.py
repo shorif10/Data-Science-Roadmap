@@ -16,7 +16,7 @@
 # [Backpropagation from scratch](../13_Deep_Learning/02_backpropagation_from_scratch.ipynb).
 #
 # > Data used: `datasets/housing.csv`, a synthetic table of 3,000 houses (`price` is the target). It has missing `age_years` and
-# > `quality_score` values and about 15 absurd prices, both planted on purpose. See `docs/DATASETS.md`.
+# > `quality_score` values and about 20 absurd prices, both planted on purpose. See `docs/DATASETS.md`.
 
 # %%
 import copy
@@ -134,7 +134,7 @@ print("trainable parameters:", n_params, "| training rows:", len(X_train))
 print("output shape for 5 rows:", model(X_train_t[:5]).shape)
 
 # %% [markdown]
-# *What just happened?* The model has more parameters than we have training rows, yet this is a small network. Keep that in mind: it can memorise the training set, and the validation curve will tell us if it does.
+# *What just happened?* The model has about as many parameters as we have training rows (compare the two numbers above), yet this is a small network. Keep that in mind: it can memorise the training set, and the validation curve will tell us if it does.
 #
 # ## 4. The five-step training loop
 #
@@ -246,7 +246,7 @@ print(f"test MAE  torch linear: {mean_absolute_error(true_test, lin_torch):,.0f}
 print(f"max gap between their predictions: {np.abs(lin_torch - linreg.predict(X_test)).max():,.0f} dollars")
 
 # %% [markdown]
-# *What just happened?* A one-layer "network" trained by gradient descent approximately reproduces the closed-form answer. This is a good **debugging ladder**: if a complex model
+# *What just happened?* A one-layer "network" trained by gradient descent gets near the closed-form answer (similar MAE; the maximum gap above shows it has not fully converged, since training stops at the best validation epoch). This is a good **debugging ladder**: if a complex model
 # disappoints, check that the loop can at least recover the simple model.
 #
 # Finally, where does the network make its errors?

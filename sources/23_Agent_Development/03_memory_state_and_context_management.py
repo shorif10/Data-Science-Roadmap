@@ -431,14 +431,14 @@ for window in (20000, 6000, 3000):
 import anthropic
 
 client = anthropic.Anthropic()                                                  # reads ANTHROPIC_API_KEY from the environment
-count = client.messages.count_tokens(model="claude-sonnet-5-5", system=BASE_SYSTEM, messages=session[-10:])
+count = client.messages.count_tokens(model="claude-sonnet-5-5", system=BASE_SYSTEM, messages=flatten(turns[-2:]))
 print("exact input tokens for the last turns:", count.input_tokens)
 
 # Server-side context editing (beta): clear old tool results before the model sees them.
 resp = client.beta.messages.create(
     model="claude-sonnet-5-5", max_tokens=1024, betas=["context-management-2025-06-27"],
     context_management={"edits": [{"type": "clear_tool_uses_20250919"}]},
-    system=BASE_SYSTEM, messages=session[-10:] + [{"role": "user", "content": "What was the status of order 1029?"}],
+    system=BASE_SYSTEM, messages=flatten(turns[-2:]) + [{"role": "user", "content": "What was the status of order 1029?"}],
 )
 # Server-side compaction (beta, long conversations): append response.content (including the compaction block) to your history, not just the text.
 # Check docs.anthropic.com for the current beta flags, supported models and the memory tool before relying on any of these.

@@ -501,7 +501,7 @@ def gate(name, candidate_version, min_delta=0.002):
 assert gate("gate-demo", v_better)[0] is True, "clearly better and same schema should pass"
 assert gate("gate-demo", v_tiny)[0] is False, "0.001 improvement is under the margin"
 ok, why = gate("gate-demo", v_break)
-assert ok is False and "schema" in why.lower() or "column" in why.lower(), f"better metric but changed schema must fail with a reason mentioning schema/columns, got {why!r}"
+assert ok is False and ("schema" in why.lower() or "column" in why.lower()), f"better metric but changed schema must fail with a reason mentioning schema/columns, got {why!r}"
 assert int(client.get_model_version_by_alias("gate-demo", "champion").version) == 1, "the gate must not move the alias"
 print("Exercise 3 passed:", why)
 

@@ -1,7 +1,7 @@
 # UNVERIFIED SKETCH: DVC is not installed in the environment where this project was written, so
 # `dvc repro` has never been run against it. The stage's cmd, deps and outs mirror the real CLI
 # (churn.train) and are checked for consistency by tests/test_infra.py.
-# Run from the project root:   dvc repro -f dvc/dvc.yaml     (after `dvc init`)
+# Run from the project root:   dvc repro dvc/dvc.yaml      (after `dvc init`; note `-f` would mean --force, not "file")
 stages:
   train:
     wdir: ..                       # paths below are relative to the project root

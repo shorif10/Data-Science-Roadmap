@@ -189,7 +189,7 @@ print(f"common-language effect size P(treatment > control) = {u / (len(rt) * len
 # | **Fail to reject** | correct | **Type II error** (false negative), probability = beta = 1 - power |
 #
 # alpha is set by you. **Power** depends on the true effect size, the noise, alpha and the sample size, and it is why "not significant" often means "not enough data". Simulate an A/B test with a true 12% relative lift
-# (10% -> 11.2%), which is the size the dataset description says was planted, at several sample sizes:
+# (10% -> 11.2%), which is the size planted in the synthetic data (the dataset generator uses a 12% relative lift), at several sample sizes:
 
 # %%
 def sim_power(p_ctrl, p_trt, n, reps=2000, seed=0):

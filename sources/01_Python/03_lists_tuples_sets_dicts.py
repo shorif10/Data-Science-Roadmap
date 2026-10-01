@@ -63,7 +63,8 @@ nums = [3, 1, 2]
 print("sort() returns:", nums.sort(), "->", nums)
 print("sorted() returns:", sorted([3, 1, 2], reverse=True))
 nums.append(9); nums.extend([7, 8]); nums.insert(0, 0)
-print(nums, "| pop():", nums.pop(), "| remove(9):", nums.remove(9), "->", nums)
+print("before pop/remove:", nums)
+print("pop():", nums.pop(), "| remove(9):", nums.remove(9), "->", nums)
 
 # %% [markdown]
 # Sort with a `key` function (called once per item), not by hand-writing comparisons. Python's sort is **stable**: items that compare equal keep their original order,

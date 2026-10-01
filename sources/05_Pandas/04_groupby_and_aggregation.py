@@ -168,7 +168,7 @@ print("weighted by group size:", round(float(np.average(group_means, weights=wei
 # %% [markdown]
 # The unweighted average of the three churn rates is visibly different from the true overall rate; weighting by group size recovers it. Always carry the count next to the rate.
 #
-# **Categorical keys show empty groups.** With a `category` column, `groupby` lists every category, even unused ones, unless `observed=True`:
+# **Categorical keys and unused categories.** With a `category` column, pandas 3 groups only the categories that occur (`observed=True` is now the default); older versions listed every category as an empty group. `observed=False` brings that behaviour back, which is useful when you need a complete table:
 
 # %%
 cat = churn.assign(contract=pd.Categorical(churn["contract"], ["Month-to-month", "One year", "Two year", "Three year"]))
@@ -322,7 +322,7 @@ top_category = revenue_by_category.idxmax()
 # - `groupby` = split, apply, combine. Nothing is computed until you aggregate.
 # - `agg(name=("col", "func"))` for readable summaries; `size` counts rows, `count` counts non-nulls.
 # - `transform` keeps the original length (group statistics on every row); `filter` keeps or drops whole groups; `head(n)` after sorting gives top-N per group.
-# - Traps: `NaN` keys are dropped unless `dropna=False`; never average rates without weights; categorical keys show empty groups unless `observed=True`.
+# - Traps: `NaN` keys are dropped unless `dropna=False`; never average rates without weights; for categorical keys, `observed=False` lists unused categories (pandas 3 hides them by default).
 #
 # **Go deeper:** pandas user guide "Group by: split-apply-combine" (pandas.pydata.org/docs/user_guide/groupby.html).
 #

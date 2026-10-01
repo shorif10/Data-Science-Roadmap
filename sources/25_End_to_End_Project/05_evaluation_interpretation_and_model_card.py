@@ -157,7 +157,7 @@ by_contract
 by_senior
 
 # %% [markdown]
-# Three things to read from these tables, in order:
+# Four things to read from these tables, in order:
 # 1. **Base rates differ a lot by contract.** Month-to-month customers churn far more often, so they are flagged far more often. That is the model working, not bias.
 # 2. **AUC inside a group is lower than overall AUC for a structural reason**: part of the overall ranking comes from separating the groups from each other.
 # 3. **Intervals overlap when groups are small.** A gap smaller than the interval is not evidence of unequal treatment. Do not "fix" noise.

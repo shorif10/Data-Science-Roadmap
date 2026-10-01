@@ -93,7 +93,7 @@ logloss = np.log1p(np.exp(-m))
 
 fig, ax = plt.subplots(figsize=(6, 4))
 ax.plot(m, zero_one, label="0-1 (accuracy)"); ax.plot(m, hinge, label="hinge"); ax.plot(m, logloss, label="log-loss")
-ax.set_xlabel("margin  y * score"); ax.set_ylabel("loss"); ax.set_title("Surrogate losses sit above the 0-1 loss")
+ax.set_xlabel("margin  y * score"); ax.set_ylabel("loss"); ax.set_title("Smooth surrogate losses vs the 0-1 loss")
 ax.grid(alpha=0.3); ax.legend()
 plt.show()
 

@@ -12,7 +12,7 @@ datasets to graduate to are listed at the end of each module.
 | `order_items.csv` | ~10,000 | joins, revenue | `item_id, order_id, product_id, quantity` |
 | `shop.db` | same 4 tables | SQL module (SQLite), DuckDB | tables `customers, products, orders, order_items` |
 | `churn.csv` | 5,000 | classification, EDA, MLOps | `customer_id, tenure_months, contract, internet_service, monthly_charges, total_charges, support_calls, paperless_billing, autopay, senior_citizen, churned` (target: `churned`; ~37% positive; has missing values and inconsistent `contract` casing) |
-| `housing.csv` | 3,000 | regression | `neighborhood, area_sqft, bedrooms, bathrooms, age_years, garage_spaces, distance_to_center_km, quality_score, price` (target: `price`; has missing values and ~15 absurd prices) |
+| `housing.csv` | 3,000 | regression | `neighborhood, area_sqft, bedrooms, bathrooms, age_years, garage_spaces, distance_to_center_km, quality_score, price` (target: `price`; has missing values and about 20 absurd prices) |
 | `reviews.csv` | 4,000 | NLP | `review_text, sentiment, stars, category` (sentiment: positive/negative/neutral) |
 | `sensors.csv` | 4,320 | time series, anomalies | `timestamp (hourly), temperature_c, power_kw, is_anomaly` (has sensor dropouts) |
 | `ab_test.csv` | 8,000 | statistics | `user_id, group (control/treatment), device, converted, revenue` |
@@ -38,7 +38,7 @@ and depends heavily on neighborhood; the A/B treatment has a true ~12% relative 
   pandas' default parser turns the text `None` into `NaN`. Only ~100 cells are genuinely blank. Notebooks that care read the
   file with `pd.read_csv(..., keep_default_na=False, na_values=[""])`. This is a classic real-world trap: always check what your
   parser treats as missing.
-- **`housing.csv` → `price`**: a few dozen absurd prices were planted (data-entry errors). Notebooks filter them by price per square
+- **`housing.csv` → `price`**: about twenty absurd prices were planted (data-entry errors). Notebooks filter them by price per square
   foot, not by a fixed price cut.
 - **`ab_test.csv`**: the true lift is real but the sample is small, so a single test may come out *inconclusive*. That is deliberate:
   it is what underpowered experiments look like.

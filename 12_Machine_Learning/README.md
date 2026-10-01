@@ -2,7 +2,7 @@
 
 **Goal:** go from "I can load a DataFrame" to "I can frame, build, evaluate and defend a tabular ML model", with honest baselines, leakage-safe evaluation and reproducible pipelines.
 
-**Prerequisites:** Python, NumPy, pandas, basic statistics and probability (modules 01-05, 03), a little linear algebra (module 02).
+**Prerequisites:** Python, NumPy, pandas, basic statistics and probability (modules 01, 03, 04, 05), a little linear algebra (module 02).
 
 ## Notebook order
 
@@ -18,7 +18,7 @@
 | 08 | `08_feature_engineering_and_pipelines` | ColumnTransformer + Pipeline, custom transformers, joblib save/load | 1.5 |
 | 09 | `09_hyperparameter_tuning` | Grid, random and successive-halving search over Pipelines; count fits; watch over-tuning inflate scores; nested CV | 1.5 |
 | 10 | `10_knn_svm_and_naive_bayes` | k-NN, SVMs and Naive Bayes: when distance, margins or independence assumptions work or break | 1.5 |
-| 11 | `11_clustering_and_dimensionality_reduction` | k-means, elbow/silhouette limits, DBSCAN, hierarchical, PCA, t-SNE on digits, RFM segmentation | 1.5 |
+| 11 | `11_clustering_and_dimensionality_reduction` | k-means, elbow/silhouette limits, DBSCAN, hierarchical, PCA on digits (scaling, reconstruction), RFM segmentation | 1.5 |
 | 12 | `12_imbalanced_data_and_decision_thresholds` | Rare events: PR-AUC vs prevalence, class weights, resampling only inside folds, cost-based threshold, calibration | 1.5 |
 | 13 | `13_model_interpretation_and_explainability` | Coefficients, permutation importance, PDP/ICE by hand, correlated-feature pitfalls, local explanations | 1.5 |
 | 14 | `14_time_series_forecasting_baselines` | Naive and seasonal baselines, lag features + boosting, walk-forward CV, MAPE failure modes | 1.5 |

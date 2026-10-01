@@ -28,7 +28,7 @@ import keras
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import log_loss, roc_auc_score
 
 c = pd.read_csv(Path("../datasets/churn.csv"))
 c["contract"] = c["contract"].str.lower()
@@ -171,8 +171,9 @@ print("gap at epochs 1, 10, 20, 30:", [round(gap.gaps[i], 3) for i in (0, 9, 19,
 def run(name, **kw):
     m = build(**kw)
     h = fit(m, epochs=100, callbacks=[keras.callbacks.EarlyStopping(monitor="val_loss", patience=8, restore_best_weights=True)])
-    auc = roc_auc_score(y[va], m.predict(X[va], verbose=0)[:, 0])
-    return {"model": name, "epochs": len(h.epoch), "best val loss": round(min(h.history["val_loss"]), 3), "val AUC": round(auc, 3)}, h
+    p_val = m.predict(X[va], verbose=0)[:, 0]
+    # Keras' `val_loss` INCLUDES the L2 penalty, so it is not comparable across L2/non-L2 models: recompute plain cross-entropy
+    return {"model": name, "epochs": len(h.epoch), "val log loss": round(log_loss(y[va], p_val), 3), "val AUC": round(roc_auc_score(y[va], p_val), 3)}, h
 
 
 rows, hists = [], {}
@@ -182,8 +183,11 @@ for name, kw in {"baseline": {}, "L2 1e-3": {"l2": 1e-3}, "dropout 0.4": {"dropo
 pd.DataFrame(rows).set_index("model")
 
 # %% [markdown]
-# Read this table carefully. The honest outcome is usually modest: with early stopping already in place the *best* validation loss is often
-# similar across variants, and differences of a few thousandths are within noise (another seed can reorder them). What regularisation buys
+# Read this table carefully. The "val log loss" column is plain cross-entropy computed from the restored weights' predictions: Keras' own `val_loss`
+# (which the early-stopping callback monitors) also adds the L2 penalty for models that have one, so it would look misleadingly worse for the L2 rows.
+# The honest outcome is usually modest: with early stopping already in place, dropout is hard to tell from the baseline here, and the L2 rows come out slightly
+# worse on both log loss and AUC (the penalty also shifts where early stopping fires, because the monitored `val_loss` includes it). Differences of a few thousandths are
+# within noise and another seed can reorder them, so do not read more into this table than "no clear gain". What regularisation buys
 # you most reliably is **slower, steadier training and a less fragile stopping point**, plus better results when the gap would otherwise be large.
 # Treat it as insurance you verify, not a magic ingredient.
 

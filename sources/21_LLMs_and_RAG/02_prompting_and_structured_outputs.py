@@ -356,8 +356,9 @@ except ValidationError as e:
 # ## 6. Swapping in the real model (no-run)
 #
 # The cell below is **not executed here** (it needs the `anthropic` package, network and an API key in `ANTHROPIC_API_KEY`).
-# It shows two real ways to get structured output from Claude. The first asks the SDK to build the schema from your pydantic
-# class and to parse the reply; the API then constrains the output to that schema. The second passes a raw JSON schema. The
+# It shows how to get structured output from Claude: `messages.parse` asks the SDK to build the schema from your pydantic
+# class and to parse the reply; the API then constrains the output to that schema. (If you already have a JSON Schema dict, pass it as
+# `output_config={"format": {"type": "json_schema", "schema": schema}}` to `messages.create` instead.) The
 # API supports a subset of JSON Schema, so check the documentation if your schema uses unusual features. Even with
 # constrained output, keep your semantic validators: they are cheap and they encode rules a schema cannot.
 #
@@ -399,7 +400,7 @@ class AnthropicLLM:
         if tools:
             kwargs["tools"] = tools
         resp = self.client.messages.create(**kwargs)
-        blocks = [b.model_dump() for b in resp.content if b.type in ("text", "tool_use")]
+        blocks = [b.model_dump(exclude_none=True) for b in resp.content]      # keep every block (thinking blocks must be sent back unchanged in tool loops)
         return LLMResponse(blocks, resp.stop_reason, {"input_tokens": resp.usage.input_tokens, "output_tokens": resp.usage.output_tokens})
 
 

@@ -154,7 +154,7 @@ stars_table
 
 # %% [markdown]
 # ## 6. Small data: where model choice starts to matter
-# Models differ most when data is scarce. Train each on only the first `k` distinct training texts and score on the same test set (sentiment target), averaging over a few random draws:
+# Models differ most when data is scarce. Train each on only `k` randomly drawn distinct training texts and score on the same test set (sentiment target), averaging over a few random draws:
 
 # %%
 rng = np.random.default_rng(42)

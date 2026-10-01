@@ -216,7 +216,7 @@ sweep.round(2)
 # 2. **Global thresholds on seasonal data** (section 1): a normal value at the wrong time is invisible.
 # 3. **Centred rolling windows or full-series statistics** that peek into the future; a production detector only has the past.
 # 4. **Treating missing data as anomalies** or filling them with zeros; detect dropouts separately.
-# 5. **Reporting accuracy** (99.4% by flagging nothing). Use PR-AUC and precision/recall at k.
+# 5. **Reporting accuracy** (about 99% by flagging nothing). Use PR-AUC and precision/recall at k.
 # 6. **Trusting `contamination`** as if it were known, and never checking alert volume and review cost.
 
 # %%

@@ -7,7 +7,7 @@
 # **You will learn**
 # - draw the ML lifecycle and say which step each later notebook in this module covers
 # - reproduce a training run by recording a **run manifest** (data hash, parameters, library versions, seed)
-# - see a **silent failure** for yourself: a serving bug that raises no error but wrecks accuracy
+# - see a **silent failure** for yourself: a serving bug that raises no error but costs accuracy
 # - place a team on the three common **maturity levels** and pick the next improvement that pays off
 # - decide honestly whether a project needs heavy MLOps at all
 #

@@ -79,7 +79,7 @@ plt.tight_layout(); plt.show()
 # %% [markdown]
 # ## 3. Standard error: the wobble of a statistic
 #
-# The **standard error (SE)** of the mean is the standard deviation of its sampling distribution, and the CLT tells us it equals `sigma / sqrt(n)`. Do not confuse it with the standard deviation `sigma` of the data:
+# The **standard error (SE)** of the mean is the standard deviation of its sampling distribution, which for independent draws equals `sigma / sqrt(n)` (the CLT adds that its shape is approximately normal). Do not confuse it with the standard deviation `sigma` of the data:
 # SD describes how spread out *individuals* are; SE describes how precisely the *mean* is pinned down. Verify the formula:
 
 # %%

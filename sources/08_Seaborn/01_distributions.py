@@ -12,7 +12,7 @@
 #
 # **Prerequisites:** [Matplotlib core chart types](../07_Matplotlib/02_core_chart_types_and_when_to_use_them.ipynb). Seaborn returns Matplotlib objects, so everything you learned there still applies.
 #
-# > Data used: `datasets/housing.csv` (synthetic house listings, with ~15 planted errors) and `datasets/churn.csv` (synthetic telecom customers; `contract` has inconsistent casing, cleaned below). We use local CSVs only: `seaborn.load_dataset` downloads data, so we never call it.
+# > Data used: `datasets/housing.csv` (synthetic house listings, with 15 planted errors; the simple price-per-sqft filter below flags a few more, a reminder that such rules are judgement calls) and `datasets/churn.csv` (synthetic telecom customers; `contract` has inconsistent casing, cleaned below). We use local CSVs only: `seaborn.load_dataset` downloads data, so we never call it.
 
 # %%
 from pathlib import Path
@@ -183,7 +183,7 @@ print("grid shape:", g.axes.shape)
 #
 # 1. **Comparing groups of different size with `stat="count"`**, or with `common_norm=True` by accident. Use `percent`/`density` and `common_norm=False`.
 # 2. **Trusting one bin width or bandwidth.** Try several; prefer the ECDF when in doubt.
-# 3. **Using a 0/1 column as `hue`**: seaborn treats it as numeric and draws a continuous colour scale. Convert to text labels.
+# 3. **Using a 0/1 column as `hue`**: seaborn treats it as numeric and picks a sequential light-to-dark palette instead of distinct category colours. Convert to text labels.
 # 4. **Dirty categories** (the `contract` casing) produce extra groups. Clean first, then plot.
 # 5. **Mixing axes-level and figure-level functions** (`ax=` is not accepted by `displot`; it makes its own figure).
 # 6. **Leaving outliers/typos in** so the plot is unreadable; inspect, then decide openly.

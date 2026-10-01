@@ -148,7 +148,7 @@ print(len(good), "usable salaries;", sum(bad.values()), "rejected; distinct bad 
 # ## 3. Reading a traceback
 # A traceback lists the call stack **oldest call first, the failing line last**, and the exception type and message at the very end. Read it **bottom-up**: what happened, where, and then how we got there.
 
-# %%
+# %% tags=["expect-traceback"]
 def read_price(text):
     return float(text)
 
@@ -256,7 +256,7 @@ print("\n".join(line for line in out.getvalue().splitlines() if line.strip())[:9
 # 3. **Using exceptions for validation of expected "bad" values** without a message. Include the offending value in the message.
 # 4. **Fixing the symptom:** wrapping in `try/except` so the crash goes away while the data is still wrong. Find the cause.
 # 5. **`assert` for input validation:** stripped under `python -O`. Raise `ValueError`.
-# 6. **Losing the original traceback** by raising a new exception without `from` (or by `raise e` in some flows). Use `raise NewError(...) from exc`, or bare `raise`.
+# 6. **Muddling the cause.** A new exception raised inside `except` without `from` is chained only implicitly ("During handling of the above exception, another exception occurred"), which reads like a second bug; the original is lost if you catch and raise outside the `except` block. Use `raise NewError(...) from exc` to name the cause (or `from None` to hide it on purpose), or a bare `raise` to re-raise unchanged.
 
 # %%
 # Mistake 1: a swallowed error turns a bug into wrong numbers

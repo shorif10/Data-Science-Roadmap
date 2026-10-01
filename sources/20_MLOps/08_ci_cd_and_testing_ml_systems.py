@@ -351,7 +351,7 @@ print(sorted(p.name for p in (PROJ / "tests").glob("*.py")))
 # %%
 def run_pytest(args=(), extra_env=None):
     env = {**os.environ, "CHURN_DATA": str(DATA), "PYTHONPATH": str(PROJ), "PYTHONDONTWRITEBYTECODE": "1", **(extra_env or {})}
-    proc = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header", "-rf", *args],
+    proc = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header", "--color=no", "-rf", *args],
                           cwd=PROJ, capture_output=True, text=True, env=env, timeout=300)
     return proc.returncode, proc.stdout
 
@@ -361,7 +361,7 @@ print(out.strip().splitlines()[-1])
 
 # %% [markdown]
 # All green. Is that meaningful? A test suite you have never seen fail is unproven. So: **sabotage the model** and check the tests notice.
-# `CHURN_SABOTAGE=tenure_reversed` trains the model on data where tenure is flipped (long becomes short), a plausible real bug (a wrong join, a sign error in a feature). Aggregate accuracy would still look respectable, because the model can learn the reversed relationship perfectly well.
+# `CHURN_SABOTAGE=tenure_reversed` trains the model on data where tenure is flipped (long becomes short), a plausible real bug (a wrong join, a sign error in a feature). (If the same bug had hit both the training and the evaluation data, aggregate accuracy would still look respectable, because the model can learn the reversed relationship perfectly well.)
 
 # %%
 code, out = run_pytest(extra_env={"CHURN_SABOTAGE": "tenure_reversed"})
@@ -419,7 +419,7 @@ print(f"cand_bad, floor only (no champion): exit code {code} | {msg}")
 
 # %% [markdown]
 # A crippled model still ranks customers surprisingly well (very strong regularisation shrinks the weights but mostly keeps their direction, so AUC, which only needs the ranking, barely collapses), so it sails past a fixed floor. **A floor alone is not a quality gate**: you need the relative comparison against what is live as well.
-# Also note `churnml.train` refuses# Also note `churnml.train` refuses to train at all if data validation fails, so a broken extract never produces a "model". Try it on a corrupted file:
+# Also note `churnml.train` refuses to train at all if data validation fails, so a broken extract never produces a "model". Try it on a corrupted file:
 
 # %%
 corrupt = pd.read_csv(DATA, keep_default_na=False)
@@ -607,6 +607,7 @@ for p in check_workflow(broken):
 
 # %% [markdown]
 # Design choices in the good workflow worth stealing: **least-privilege** `permissions`; `concurrency` cancelling superseded runs; a `timeout-minutes` on every job; cached pip installs; the gate as its own visible step so a red X says exactly *why*; and uploaded artifacts so a reviewer can download the candidate model.
+# (In the gate step, `champion/metrics.json` stands for wherever you keep the live model's metrics, for example fetched from the model registry; it is not a file in a fresh checkout. Check the current action versions and syntax in the GitHub Actions documentation before copying this.)
 # Actions referenced by **tag** (`@v4`) are convenient but tags can be moved; the strictest practice pins a **commit SHA**. We do not show real SHAs because we cannot verify them offline.
 
 # %% [markdown]

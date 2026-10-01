@@ -111,11 +111,11 @@ def ppmi_matrix(C, alpha=0.75):
 
 
 P = ppmi_matrix(C)
-row = pd.Series(P[index["great"]], index=vocab).sort_values(ascending=False)
-print("contexts most associated with 'great' (PPMI):")
+row = pd.Series(P[index["support"]], index=vocab).sort_values(ascending=False)
+print("contexts most associated with 'support' (PPMI):")
 print(row.head(6).round(2).to_string())
-raw = pd.Series(C[index["great"]], index=vocab).sort_values(ascending=False)
-print("\ncontexts with the highest RAW count for 'great':", list(raw.head(6).index))
+raw = pd.Series(C[index["support"]], index=vocab).sort_values(ascending=False)
+print("\ncontexts with the highest RAW count for 'support':", list(raw.head(6).index))
 
 # %% [markdown]
 # Compare the two lists: the raw ranking is topped by "and", a word that co-occurs with nearly everything, while PPMI puts "helpful", "replied", "never" and "customer" first, the words that really belong with "support"

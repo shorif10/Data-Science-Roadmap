@@ -551,6 +551,7 @@ print("original database unchanged:", sha256(ORIGINAL_DB) == ORIGINAL_HASH)
 # | 3. **SQLite authorizer** (callback that sees every table/column/function the query touches) | reads outside the allow-list, dangerous functions, `PRAGMA`, `ATTACH` | it is per-statement, not per-runtime |
 # | 4. **Row cap** (`fetchmany(max+1)`) | huge result sets flooding the model's context | |
 # | 5. **Time limit** (progress handler) | infinite or very expensive queries | |
+# | 5 (also). **Value size limit** (`setlimit`) | a query that builds a gigabyte string (for example `s||s` in a recursive CTE) and exhausts memory before the time limit can react | needs Python 3.11+ |
 # | 6. **Parameters for values** | injection through arguments | (use `?`, never f-strings) |
 #
 # The code is one small module, written to a file so the server and this notebook use *exactly the same code*. Read
@@ -611,6 +612,8 @@ SQL_GUARD_SRC = textwrap.dedent('''
             con.set_authorizer(make_authorizer(allowed_tables))                    # layer 3
             deadline = time.monotonic() + timeout_s
             con.set_progress_handler(lambda: 1 if time.monotonic() > deadline else 0, 1000)   # layer 5
+            if hasattr(con, "setlimit"):                                          # Python 3.11+: cap any single value (a time limit does not bound memory)
+                con.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, 1_000_000)
             try:
                 cur = con.execute(sql)
                 rows = cur.fetchmany(max_rows + 1)                                 # layer 4
@@ -703,15 +706,24 @@ assert sha256(ORIGINAL_DB) == ORIGINAL_HASH
 
 # %%
 DB_FOR_TESTS = fresh_copy("layers_copy.db")
-runaway = "WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM r) SELECT COUNT(*) FROM r"
+runaway = "WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM r) SELECT MAX(n) FROM r"
 t0 = time.perf_counter()
 try:
     run_readonly(runaway, db_path=DB_FOR_TESTS, timeout_s=0.5)
     raise AssertionError("the runaway query should have been interrupted")
 except UnsafeQuery as exc:
-    elapsed = time.perf_counter() - t0
-    print(f"runaway query stopped after {elapsed:.2f}s: {exc}")
-assert elapsed < 5
+    elapsed, reason = time.perf_counter() - t0, str(exc)
+    print(f"runaway query stopped after {elapsed:.2f}s: {reason}")
+assert elapsed < 5 and "time limit" in reason, "it must be the progress handler (not the authorizer) that stops it"
+
+bomb = "WITH RECURSIVE r(s) AS (SELECT 'aaaaaaaa' UNION ALL SELECT s || s FROM r) SELECT MAX(length(s)) FROM r"
+t0 = time.perf_counter()
+try:
+    run_readonly(bomb, db_path=DB_FOR_TESTS, timeout_s=2.0)
+    raise AssertionError("the memory bomb should have been refused")
+except UnsafeQuery as exc:
+    print(f"memory bomb refused after {time.perf_counter() - t0:.2f}s: {exc}")
+assert time.perf_counter() - t0 < 5, "without a size limit this query ran for about 30 seconds and used gigabytes of memory"
 
 big = run_readonly("SELECT * FROM order_items", db_path=DB_FOR_TESTS, max_rows=25)
 total_items = count(DB_FOR_TESTS, "order_items")

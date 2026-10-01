@@ -232,7 +232,7 @@ LIMIT 5
 # | string concat | `a \|\| b` | `a \|\| b` | `CONCAT(a, b)` | `a \|\| b` / `CONCAT` |
 # | boolean type | integers 0/1 | `BOOLEAN` | `TINYINT(1)` | `BOOLEAN` |
 # | row limit | `LIMIT n` | `LIMIT n` | `LIMIT n` | `LIMIT n` (SQL Server: `TOP n`) |
-# | case-insensitive match | `LIKE` | `ILIKE` | `LIKE` (collation) | `ILIKE` |
+# | case-insensitive match | `LIKE` | `ILIKE` | `LIKE` (collation) | Snowflake `ILIKE`; BigQuery `LOWER(a) LIKE ...` (verify in the docs) |
 
 # %% [markdown]
 # ## 7. The logical order of a query

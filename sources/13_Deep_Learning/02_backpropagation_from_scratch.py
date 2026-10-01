@@ -16,7 +16,7 @@
 # **Prerequisites:** [01 Neurons, layers and the forward pass](01_neurons_layers_and_the_forward_pass.ipynb) and
 # [Calculus: derivatives and gradients](../02_Math_for_Data_Science/03_calculus_derivatives_and_gradients.ipynb)
 # (chain rule, partial derivatives). The maths of gradient descent is in
-# [Optimisation](../02_Math_for_Data_Science/04_optimization_and_gradient_descent.ipynb).
+# [Optimisation](../02_Math_for_Data_Science/04_gradient_descent_from_scratch.ipynb).
 #
 # > Data used: scikit-learn's bundled `digits` (1,797 real 8x8 handwritten digit images).
 

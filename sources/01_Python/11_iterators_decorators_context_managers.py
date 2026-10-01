@@ -79,7 +79,7 @@ print(list(countdown_gen(4)))
 
 # %%
 import random
-rng = random.Random(42)
+rng = random.Random(7)
 rolls = list(iter(lambda: rng.randint(1, 6), 6))       # roll until a 6 appears
 print("rolled until first six:", rolls)
 

@@ -155,7 +155,7 @@ let
                   each Text.Proper(Text.Combine(List.Select(Text.Split(Text.Trim(_), " "), each _ <> ""), " ")), type text}}),
     Country  = Table.TransformColumns(Names, {{"country",
                   each Text.Upper(Text.Trim(_)), type text}}),
-    Mapped   = Table.ReplaceValue(Country, "USA", "US", Replacer.ReplaceValue, {"country"}),   // repeat per spelling, or merge a mapping table
+    Mapped   = Table.ReplaceValue(Country, "USA", "US", Replacer.ReplaceValue, {"country"}),   // only 'USA' shown: repeat for UNITED STATES, U.S., INDIA, UNITED KINGDOM ..., or (better) merge a mapping table
     Age      = Table.TransformColumns(Mapped, {{"age",
                   each let n = try Number.FromText(_) otherwise null in if n = null or n = -1 or n = 999 then null else n, type nullable number}}),
     Salary   = Table.TransformColumns(Age, {{"salary",

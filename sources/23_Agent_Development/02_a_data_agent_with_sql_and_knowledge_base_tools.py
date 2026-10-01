@@ -54,7 +54,7 @@ print("db hash (first 12):", HASH_BEFORE[:12], "| KB documents:", len(KB))
 # | unbounded work | a three-way cross join that never finishes |
 #
 # No single check covers all of them, so we stack independent layers: **(1)** a validator that rejects bad SQL with a clear message, **(2)** a **read-only connection**, **(3)** a SQLite **authorizer** (an allow-list the engine
-# itself consults for every operation), **(4)** a **row and size cap**, **(5)** a **timeout** via a progress handler. If layer 1 has a bug, layers 2 and 3 still refuse writes; if a query is legal but huge, layers 4 and 5 bound it.
+# itself consults for every operation), **(4)** a **row and size cap**, **(5)** a **timeout** via a progress handler (plus a per-value size limit, because a timeout bounds time but not memory). If layer 1 has a bug, layers 2 and 3 still refuse writes; if a query is legal but huge, layers 4 and 5 bound it.
 
 # %% [markdown]
 # ## 2. Layer 1: the validator
@@ -125,7 +125,7 @@ for sql in BAD:
 #
 # - **Read-only connection** (`mode=ro` in the URI): the database file cannot be modified through this connection, whatever SQL arrives.
 # - **Authorizer**: SQLite calls your function for every operation it is about to perform (select, read a column, call a function, insert, pragma, attach...) and you answer *allow* or *deny*. We allow only `SELECT`, function
-#   calls, recursive CTEs, and **reads of the four allowed tables**; everything else, including any write and any read of `sqlite_master`, is denied by the engine itself.
+#   calls, the recursive-CTE action, and **reads of the four allowed tables** (some recursive CTEs, e.g. ones aggregated with `COUNT(*)`, are reported by SQLite as a read of the CTE's own name and are denied too: a safe false rejection); everything else, including any write and any read of `sqlite_master`, is denied by the engine itself.
 # - **Cap**: fetch at most `max_rows + 1` rows; if the extra row exists, return `max_rows` and `truncated: true`, so the model knows the result is partial rather than assuming it is complete.
 # - **Timeout**: a progress handler is called every N virtual-machine steps; returning non-zero aborts the query.
 #
@@ -171,6 +171,8 @@ def execute_sql(sql, max_rows=50, timeout_s=2.0, validate=True, use_authorizer=T
         con.set_authorizer(authorizer)                             # layer 3
     deadline = time.monotonic() + timeout_s
     con.set_progress_handler(lambda: 1 if time.monotonic() > deadline else 0, 10000)      # layer 5
+    if hasattr(con, "setlimit"):                                      # Python 3.11+: a timeout bounds time, not memory, so also cap the size of any single value
+        con.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, 1_000_000)
     try:
         return fetch_limited(con.execute(cleaned), max_rows)       # layer 4
     except sqlite3.OperationalError as exc:
@@ -227,6 +229,11 @@ try:
     execute_sql("select count(*) from order_items a, order_items b, order_items c", timeout_s=0.5)
 except ToolError as exc:
     print(f"\ncross join stopped after {time.perf_counter() - t0:.2f}s:", exc)
+try:
+    execute_sql("select length(hex(randomblob(300000000)))")        # legal SQL, allowed function: without a size limit this builds a ~600 MB string
+    print("memory blow-up was NOT stopped (needs Python 3.11+ for setlimit)")
+except ToolError as exc:
+    print("memory blow-up stopped:", exc)
 print("db untouched:", hashlib.sha256(DB_FILE.read_bytes()).hexdigest() == HASH_BEFORE)
 
 # %% [markdown]

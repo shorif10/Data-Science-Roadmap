@@ -39,7 +39,7 @@ print("Keras", keras.__version__, "| backend:", keras.backend.backend())
 # computes `relu(x @ W + b)`: 32 weighted sums, each passed through a kink that lets the network bend. Stack a few and the model
 # can represent curved relationships that a straight line cannot.
 #
-# **Data first.** Predict `price` (in $1000s) from the property features. The dataset has missing values and ~15 absurd prices
+# **Data first.** Predict `price` (in $1000s) from the property features. The dataset has missing values and about 20 absurd prices
 # (see `DATASETS.md`); we remove the impossible prices, and fill missing numbers with the **training** median.
 
 # %%

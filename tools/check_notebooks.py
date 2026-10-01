@@ -67,6 +67,18 @@ def run_one(path: str, timeout: int):
         client = NotebookClient(nb, timeout=timeout, kernel_name="python3",
                                 resources={"metadata": {"path": str(p.parent)}}, allow_errors=False)
         client.execute()
+        # A traceback printed to a stream (not raised as an error) means a failure was swallowed,
+        # e.g. an AssertionError wrapped in an ExceptionGroup inside an async context manager.
+        for i, cell in enumerate(nb.cells):
+            for out in cell.get("outputs", []):
+                if out.get("output_type") == "stream" and (
+                        "Traceback (most recent call last)" in out.get("text", "")
+                        or "ExceptionGroup" in out.get("text", "")):
+                    if "expect-traceback" not in cell.metadata.get("tags", []):
+                        first = cell.source.strip().splitlines()[0][:70] if cell.source.strip() else ""
+                        return path, False, f"{time.time() - t0:5.1f}s", (
+                            f"cell {i} printed a traceback without failing ({first!r}); "
+                            "a swallowed error. Tag it expect-traceback only if that is the point of the cell.")
         return path, True, f"{time.time() - t0:5.1f}s  exercises={n_ex} skipped={skipped}", ""
     except CellExecutionError as exc:
         msg = str(exc)

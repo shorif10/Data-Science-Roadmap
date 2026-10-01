@@ -227,7 +227,7 @@ WHEN NOT MATCHED THEN
 # | Full key comparison | compare all keys in source and target | yes | reads every key each run |
 # | **Change log (CDC)** | record every insert/update/delete as an event | yes, plus history | needs a log: triggers or database log |
 #
-# **Log-based CDC** (Debezium, database-native logical replication) reads the database's own transaction log, so it adds no load to the tables and misses nothing. Below, a **trigger-based** version that you can run and inspect: triggers write one row to `change_log` per change.
+# **Log-based CDC** (Debezium, database-native logical replication) reads the database's own transaction log, so it adds little load to the source tables and sees every committed change in order (deletes included). Below, a **trigger-based** version that you can run and inspect: triggers write one row to `change_log` per change.
 
 # %%
 src.executescript("""
@@ -387,7 +387,7 @@ for sink in ("events_naive", "events_idem"):
 
 # %% [markdown]
 # The crash left the offset un-saved, so the restart **replayed** the first batch. The keyed sink absorbed the replay (10 rows), the naive sink stored 5 events twice (15 rows).
-# This is the whole trick behind "exactly-once" pipelines: **at-least-once delivery plus idempotent writes**. When the sink cannot be keyed (for example it is an external API call), store the offset *in the same transaction* as the write, as `incremental_load` did with the watermark.
+# This is the whole trick behind "exactly-once" pipelines: **at-least-once delivery plus idempotent writes**. When the sink cannot be keyed but is transactional, store the offset *in the same transaction* as the write, as `incremental_load` did with the watermark; for an external API call, rely on that API's own idempotency key (notebook 18.05).
 #
 # If you only have a duplicate-ridden table, dedupe by keeping the latest version per key:
 

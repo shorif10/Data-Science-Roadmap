@@ -366,4 +366,4 @@ with tempfile.TemporaryDirectory() as _tmp:
 #
 # **Go deeper:** scikit-learn user guide "Pipelines and composite estimators" and "Preprocessing data" (scikit-learn.org/stable/modules/compose.html).
 #
-# **Next:** [Hyperparameter tuning](09_hyperparameter_tuning.ipynb) (written separately; same folder).
+# **Next:** [Hyperparameter tuning](09_hyperparameter_tuning.ipynb)

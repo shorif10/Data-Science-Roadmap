@@ -55,7 +55,7 @@ print(churn["internet_service"].value_counts().to_dict())
 
 # %% [markdown]
 # *What just happened?* The file contains the literal text `None` (meaning "no internet service"). pandas' default parser treats the string `None` as a missing
-# value, so a legitimate category turned into thousands of "missing" cells. If you had "fixed" that by imputation, you would have corrupted a real segment. Decide explicitly
+# value, so a legitimate category turned into over a thousand "missing" cells. If you had "fixed" that by imputation, you would have corrupted a real segment. Decide explicitly
 # what counts as missing (`na_values`, `keep_default_na`) and check the result. From here on we read `churn` the careful way.
 
 # %% [markdown]

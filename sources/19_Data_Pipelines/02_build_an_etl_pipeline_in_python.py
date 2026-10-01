@@ -236,7 +236,7 @@ def transform(tables, log):
 # %% [markdown]
 # ## 6. Load: atomic and idempotent
 # * **SQLite** (stands in for a warehouse): write each table to a `_new` staging name, then drop-and-rename inside one transaction. Readers see the old table or the new table, never a gap.
-# * **Parquet**: write the partitioned dataset into a staging folder, then swap folders. (A rename of a directory is atomic on one filesystem; object stores need a manifest or a table format instead.)
+# * **Parquet**: write the partitioned dataset into a staging folder, then swap folders. (Each rename of a directory is atomic on one filesystem, but our two-step swap leaves a very short moment with no final folder; a truly gap-free swap needs a pointer or manifest file, and object stores need a manifest or a table format instead.)
 #
 # Both **replace** the full output, so running twice equals running once.
 

@@ -226,8 +226,8 @@ pd.Series(res).sort_values(ascending=False).round(3).to_frame("test ROC-AUC")
 # trees only approximate with steps. Ensembles shine when there are strong interactions and non-linearities; when there are not, they add cost and lose interpretability for nothing.
 # One split is also a noisy referee (notebook 02), so notebook 07 turns this comparison into a proper one with repeated cross-validation.
 #
-# Now regression. Housing, with the absurd-price rule from notebook 03 (price per sq ft outside 20-500), metric test MAE (lower is better). Trees here read missing values natively,
-# the linear model gets a median imputer:
+# Now regression. Housing, with the absurd-price rule from notebook 03 (price per sq ft outside 20-500), metric test MAE (lower is better). The forest and the boosted model read missing values natively;
+# the linear model, the single tree and the dummy get a median imputer:
 
 # %%
 h = pd.read_csv(DATA / "housing.csv")

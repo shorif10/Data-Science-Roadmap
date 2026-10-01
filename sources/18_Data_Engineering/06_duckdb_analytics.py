@@ -208,8 +208,8 @@ b = con.sql(Q2.format(t="big_t")).df().sort_values(["s", "customer_id"], ascendi
 print("top-10 customers identical:", a["customer_id"].tolist() == b["customer_id"].tolist() and np.allclose(a["amount"], b["s"]))
 
 # %% [markdown]
-# *What just happened?* Look at the middle column: **querying the pandas DataFrame directly can be *slower* than pandas itself.** In pandas 3 the text column is a pandas `str` column, and DuckDB has to convert it to its own
-# representation on every single query. Once the data lives in DuckDB's own table (or in Parquet, next), the conversion cost disappears and the columnar engine shows its strength. The lesson is not "DuckDB is slow on DataFrames":
+# *What just happened?* Look at the middle column: **querying the pandas DataFrame directly can be *slower* than pandas itself.** DuckDB has to read and convert pandas data into its own
+# representation on every single query (a likely contributor in pandas 3 is the text column, stored as a pandas `str` column; we did not profile which part dominates). Once the data lives in DuckDB's own table (or in Parquet, next), the conversion cost disappears and the columnar engine shows its strength. The lesson is not "DuckDB is slow on DataFrames":
 # it is that **where the data lives matters as much as which engine you use**. Convert once, or skip pandas entirely by reading files.
 #
 # Now the more realistic case for big data: the data starts **on disk**. Compare "read the Parquet file into pandas, then aggregate" with "let DuckDB aggregate the file directly"

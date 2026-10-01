@@ -128,7 +128,7 @@ baseline_table.round(2)
 
 # %% [markdown]
 # *What just happened?* Ranking is driven by structure. "Naive" and the flat 24-hour mean ignore the daily cycle and lose badly. "Same hour yesterday" captures the cycle, but it is wrong every Monday and Saturday because of the weekend effect; "same hour last week"
-# fixes that and is hard to beat with no model at all. **Pick the baseline whose period matches the seasonality of the data.** Averaging several past weeks trades bias for less noise. Whatever model we build next has to beat the best row of this table, or it is not worth deploying.
+# fixes that and is hard to beat with no model at all. **Pick the baseline whose period matches the seasonality of the data.** Averaging the same hour over the last 7 days smooths noise but blends weekdays with weekend days, which adds bias, so it still loses to last week's same weekday. Whatever model we build next has to beat the best row of this table, or it is not worth deploying.
 
 # %%
 day = pd.Timestamp(power.index[test_start]) + pd.Timedelta(days=9)  # one test day, to see the forecasts
@@ -268,7 +268,7 @@ print(f"MAE (orders/day)                       : {mae(a, f):.2f}")
 print(f"WAPE = sum |error| / sum actual        : {100 * np.abs(a - f).sum() / a.sum():.0f}%")
 
 # %% [markdown]
-# Two more reasons MAPE misleads. It weights a miss on a 1-order day the same as a miss on a 40-order day, so a handful of quiet days dominate. And it **rewards under-forecasting**: the best constant forecast under MAPE is lower than the best under MAE.
+# Two more reasons MAPE misleads. It treats a 100% miss on a 1-order day exactly like a 100% miss on a 40-order day, so a handful of quiet days (where missing by one order is a huge percentage) dominate. And it **rewards under-forecasting**: the best constant forecast under MAPE is lower than the best under MAE.
 # Check it:
 
 # %%

@@ -184,7 +184,7 @@ print("after 't':", [(bigram.vocab[i], round(float(p[i]), 3)) for i in top])
 # (Two engineering details: `k` is *add-k smoothing*, so no character ever has probability exactly zero; and if a
 # long context was never seen in training, `probs` **backs off** to a shorter suffix of it.)
 #
-# The model says that after `t` the likely characters are `h`, `i`, `space`, and so on: English-looking statistics
+# The model says that after `t` the likely characters are `h`, space, `e`, `o`, and so on (see the plot): English-looking statistics
 # learned from 3 KB. Let's look at the whole distribution for one context.
 
 # %%
@@ -266,8 +266,8 @@ for T in (0.1, 0.7, 1.5):
     print(f"--- T={T}\n{out}\n")
 
 # %% [markdown]
-# Read the three samples. At low temperature the model tends to reproduce policy text almost word for word
-# (it **memorised** a tiny corpus and mostly follows one path); at high temperature it drifts into invented
+# Read the three samples. At low temperature the model tends to copy stretches of the policy text
+# (it **memorised** a tiny corpus and mostly follows one path, although the sample is not a clean quotation); at high temperature it drifts into invented
 # words. Both effects are real properties of LLMs, at very different scales: low temperature is more repeatable
 # but can get stuck in loops; high temperature is more varied but more likely to say something wrong.
 #
@@ -334,8 +334,8 @@ best_order = min(results, key=lambda o: results[o][1])
 print("best order on held-out text:", best_order)
 
 # %% [markdown]
-# *What just happened?* Training perplexity keeps falling as the context grows (the model memorises), but
-# held-out perplexity bottoms out and then rises, because long contexts in new text were never seen in training.
+# *What just happened?* Training perplexity falls steeply as the context grows (the model memorises) and then flattens, but
+# held-out perplexity bottoms out early and then rises, because long contexts in new text were never seen in training.
 # This is the same **generalisation vs memorisation** tension you know from ML; it is why bigger models need
 # far more data, and why an LLM can recite text it saw often while still being unreliable on facts it saw rarely.
 # Neural networks fix the "never seen this exact context" problem by mapping similar contexts to similar

@@ -115,7 +115,7 @@ print(f"R-squared = {m1.rsquared:.3f}")
 # - **R-squared**: the share of the variance of price explained by the model (0 to 1). It does not tell you the model is correct or the coefficients causal.
 #
 # **Assumptions behind these p-values and intervals:** (1) the mean of `y` is linear in the predictors, (2) residuals have constant variance (homoscedasticity), (3) residuals are independent, (4) residuals are roughly normal (matters mostly for small samples; the CLT covers large ones).
-# We test them in section 4.
+# We test them in the diagnostics part of section 3.
 
 # %% [markdown]
 # ## 3. Multiple regression with categories, and a log model
